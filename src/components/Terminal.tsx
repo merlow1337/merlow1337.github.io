@@ -86,7 +86,7 @@ export function Terminal({ lang, onClose, onAction, onOpenAgent, onUse }: { lang
         const result = arg ? matchJob(arg, lang) : null
         if (!result) { out('usage: match <descrição da vaga>'); break }
         const bar = '█'.repeat(Math.round(result.score / 5)).padEnd(20, '░')
-        out(`fit [${bar}] ${result.score}%`, ...result.matched.map(item => '  ✓ ' + item.label), ...result.missing.map(item => '  ○ ' + item.label))
+        out(`fit [${bar}] ${result.score}% (${result.required} requisitos reconhecidos${result.unrecognized.length ? `, ${result.unrecognized.length} fora do dicionário` : ""})`, ...result.matched.map(item => '  ✓ ' + item.label), ...result.missing.map(item => '  ○ ' + item.label))
         break
       }
       case 'copy': onAction({ type: 'copy', value: profile.email }); out('✓ ' + profile.email); break

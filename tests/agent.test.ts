@@ -55,6 +55,14 @@ describe('copiloto de vagas', () => {
     }
   })
 
+  it('termos fora do dicionário são listados e não entram no cálculo', () => {
+    const result = matchJob('Requisitos: SAP, Kubernetes, Tableau e Power BI. Desejável: Scrum.', 'pt')!
+    expect(result.required).toBe(2) // SAP e Power BI
+    expect(result.unrecognized).toEqual(expect.arrayContaining(['Kubernetes', 'Tableau', 'Scrum']))
+    expect(result.verdict).toMatch(/fora do cálculo/)
+    expect(result.verdict).not.toMatch(/alta|forte/i)
+  })
+
   it('requisito ausente do currículo aparece como ausente', () => {
     const result = matchJob('Requisitos: espanhol fluente e SAP', 'pt')!
     expect(result.missing.map(item => item.id)).toContain('spanish')

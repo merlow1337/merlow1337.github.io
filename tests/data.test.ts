@@ -35,6 +35,19 @@ describe.runIf(linkedin)('linkedin.json (gerado pelo importador)', () => {
     expect(linkedin.experience.filter((exp: { end: unknown }) => exp.end === null).length, 'no máximo um cargo atual... ou ajuste este teste').toBeLessThanOrEqual(2)
   })
 
+  it('não contém dados corporativos que devem ser generalizados (src/data/redactions.json)', () => {
+    const rules = JSON.parse(readFileSync('src/data/redactions.json', 'utf8'))
+    const check = (texts: string[], lang: 'pt' | 'en', file: string) => {
+      for (const rule of rules[lang]) for (const text of texts) {
+        expect(new RegExp(rule.pattern, rule.flags ?? 'g').test(text), `${file}: "${text.slice(0, 70)}" casa com a regra ${rule.pattern} — aplique a generalização`).toBe(false)
+      }
+    }
+    const strings = (v: unknown): string[] => typeof v === 'string' ? [v] : Array.isArray(v) ? v.flatMap(strings) : v && typeof v === 'object' ? Object.values(v).flatMap(strings) : []
+    check(strings({ ...linkedin, source: null }), 'pt', 'linkedin.json')
+    check(Object.keys(translations), 'pt', 'translations.json (chaves)')
+    check(Object.values(translations), 'en', 'translations.json (valores)')
+  })
+
   it('não contém dados de contato', () => {
     const text = JSON.stringify(linkedin)
     expect(text).not.toMatch(/\(?\b[1-9]{2}\)?[\s-]?9\d{4}[\s-]?\d{4}\b/)

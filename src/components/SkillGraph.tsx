@@ -89,7 +89,7 @@ export function SkillGraph({ lang, onExplore, onGo }: { lang: Lang; onExplore: (
   return (
     <div className="graph-wrap">
       <div className="graph-canvas">
-        <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={t.graphTitle}>
+        <svg viewBox={`0 0 ${W} ${H}`} role="group" aria-label={t.graphTitle}>
           <defs>
             <radialGradient id="graph-core"><stop offset="0%" stopColor="var(--accent)" stopOpacity=".22" /><stop offset="100%" stopColor="var(--accent)" stopOpacity="0" /></radialGradient>
           </defs>

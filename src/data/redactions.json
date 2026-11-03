@@ -1,0 +1,11 @@
+{
+  "_about": "Regras de generalização de dados corporativos aplicadas a tudo o que vem do LinkedIn antes de ir para o site (importador, site e testes). Use regex genéricas, sem os números reais. O teste tests/data.test.ts falha se algum texto público ainda casar com estas regras.",
+  "pt": [
+    { "pattern": "\\b\\d[\\d.,]*\\s+(depositantes|clientes)(\\s+ativos)?", "replace": "múltiplos $1$2", "flags": "gi" },
+    { "pattern": "(aproximadamente|cerca de|mais de)?\\s*\\b\\d[\\d.,]*\\s+SKUs", "replace": "milhares de SKUs", "flags": "gi" }
+  ],
+  "en": [
+    { "pattern": "\\b\\d[\\d.,]*\\s+(active\\s+)?(clients|depositors|customers)", "replace": "multiple $1$2", "flags": "gi" },
+    { "pattern": "(approximately|about|over)?\\s*\\b\\d[\\d.,]*\\s+SKUs", "replace": "thousands of SKUs", "flags": "gi" }
+  ]
+}

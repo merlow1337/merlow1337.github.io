@@ -2,7 +2,7 @@
   "source": {
     "file": "Profile.pdf",
     "pages": 7,
-    "importedAt": "2026-11-03T01:33:23.615Z"
+    "importedAt": "2026-11-03T02:45:37.367Z"
   },
   "name": "Filipe Carneiro da Silva",
   "headline": "Gestão de Processos e Inventários | Eficiência Operacional | Business Intelligence & Análise de Dados | Automação | Python · SQL · Power BI",
@@ -45,7 +45,7 @@
       "description": "Supervisão de processos, inventários e eficiência operacional em ambiente logístico multiclientes, com atuação no controle de estoques, planejamento de recursos, análise de dados e melhoria contínua.",
       "highlights": [
         "Gestão de inventários cíclicos e gerais, incluindo planejamento, dimensionamento de equipes, contagens, conciliação físico-sistêmica, análise de divergências e planos de ação.",
-        "Análise e controle de estoques de 24 depositantes ativos, abrangendo aproximadamente 6.460 SKUs.",
+        "Análise e controle de estoques de múltiplos depositantes ativos, abrangendo milhares de SKUs.",
         "Elaboração de Curvas ABC, análises de movimentação e dimensionamento de posições de picking para implantações, mudanças de galpão e reestruturações operacionais.",
         "Desenvolvimento de forecasts mensais e sazonais para planejamento de capacidade produtiva, dimensionamento de headcount, FTEs e alocação de recursos.",
         "Monitoramento de indicadores de desempenho (KPIs), análise de desvios, acompanhamento de FCAs e elaboração de relatórios gerenciais.",

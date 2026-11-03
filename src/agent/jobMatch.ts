@@ -1,7 +1,7 @@
 // Copiloto do recrutador: extrai requisitos de uma descrição de vaga e cruza com evidências do currículo.
 import type { Lang } from '../data/resume'
 import { chunks, type Chunk } from './knowledge'
-import { conceptsIn, conceptById } from './text'
+import { conceptsIn, conceptById, concepts } from './text'
 
 export type Evidence = { title: string; target: string; kind?: Chunk['kind'] }
 /** proven = aparece em experiência/formação; declared = só na lista de competências ou no resumo */
@@ -12,6 +12,10 @@ export type MatchResult = {
   matched: MatchItem[]
   missing: MatchItem[]
   verdict: string
+  /** trechos da vaga que o dicionário não reconheceu e que, portanto, NÃO entraram no cálculo */
+  unrecognized: string[]
+  /** tamanho do dicionário de conceitos usado */
+  vocabulary: number
 }
 
 const priority: Record<Chunk['kind'], number> = { experience: 0, education: 1, skills: 2, research: 3, course: 4, profile: 5 }
@@ -30,6 +34,8 @@ export function matchJob(description: string, lang: Lang): MatchResult | null {
   let ids = conceptsIn(description)
   const specific = ids.filter(id => !generic.has(id))
   if (specific.length) ids = specific
+  // "Power BI" também casa com o conceito genérico "BI": conta uma vez só
+  if (ids.includes('powerbi') && !/business intelligence|dashboards?|pain[eé]is/i.test(description)) ids = ids.filter(id => id !== 'bi')
   if (!ids.length) return null
   const matched: MatchItem[] = []
   const missing: MatchItem[] = []
@@ -43,15 +49,32 @@ export function matchJob(description: string, lang: Lang): MatchResult | null {
   // evidência só "declarada" (lista de skills/resumo) vale meio ponto
   const points = matched.reduce((sum, item) => sum + (item.strength === 'proven' ? 1 : 0.5), 0)
   const score = Math.round((points / ids.length) * 100)
+  const unrecognized = findUnrecognized(description)
+  const proven = matched.filter(item => item.strength === 'proven').length
+  const declared = matched.length - proven
+  // texto descritivo, sem rótulos como "alta"/"forte": o número só vale para os requisitos que o dicionário reconheceu
   const verdicts = {
-    pt: score >= 80 ? 'Aderência alta: a maior parte dos requisitos tem evidência direta na trajetória.'
-      : score >= 55 ? 'Aderência boa: requisitos centrais atendidos, com alguns pontos a aprofundar em entrevista.'
-      : 'Aderência parcial: há experiência relacionada, mas vários requisitos não aparecem no currículo.',
-    en: score >= 80 ? 'Strong fit: most requirements are backed by direct evidence in the career history.'
-      : score >= 55 ? 'Good fit: core requirements are covered, with a few points worth exploring in an interview.'
-      : 'Partial fit: there is related experience, but several requirements do not appear in the resume.',
+    pt: `Dos ${ids.length} requisitos reconhecidos, ${proven} têm evidência em experiência ou formação, ${declared} aparecem só como competência declarada e ${missing.length} não aparecem no currículo.` +
+      (unrecognized.length ? ` ${unrecognized.length} trecho(s) da vaga não foram reconhecidos e ficaram fora do cálculo.` : ''),
+    en: `Of the ${ids.length} recognized requirements, ${proven} are backed by work or education, ${declared} are only listed as declared skills and ${missing.length} do not appear in the resume.` +
+      (unrecognized.length ? ` ${unrecognized.length} part(s) of the job were not recognized and were left out of the score.` : ''),
   }
-  return { score, required: ids.length, matched, missing, verdict: verdicts[lang] }
+  return { score, required: ids.length, matched, missing, verdict: verdicts[lang], unrecognized, vocabulary: concepts.length }
+}
+
+const FILLER = /^(requisitos?|requirements?|desej[aá]vel|diferencia(l|is)|nice to have|responsabilidades|responsibilities|atividades|experi[eê]ncia( com| em)?|conhecimentos?( em| de)?|no[cç][oõ]es( de)?|dom[ií]nio( de)?|vaga|cargo|e|ou|and|or|with|com|de|em)\b\s*/i
+/** Trechos curtos da vaga (itens de lista) sem nenhum conceito conhecido. */
+function findUnrecognized(description: string): string[] {
+  const out: string[] = []
+  for (const raw of description.split(/[,;\n•·|]|\.\s|\s-\s|\s\+\s|\be\b(?=\s+[A-ZÀ-Ú])/)) {
+    let part = raw.replace(/^[^:]{0,40}:\s*/, '').trim().replace(/\.$/, '')
+    for (let i = 0; i < 4; i++) part = part.replace(FILLER, '').trim()
+    const words = part.split(/\s+/).filter(Boolean)
+    if (!part || words.length > 6 || part.length < 2) continue
+    if (conceptsIn(part).length) continue
+    if (!out.some(item => item.toLowerCase() === part.toLowerCase())) out.push(part)
+  }
+  return out.slice(0, 10)
 }
 
 // Exemplos genéricos de vagas para testar o copiloto com um clique.

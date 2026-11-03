@@ -22,7 +22,7 @@ export function MatchView({ result, lang, compact, onGo }: { result: MatchResult
       <div className="match-head">
         <Gauge value={result.score} size={compact ? 76 : 120} />
         <div>
-          <span className="kicker">{result.matched.length}/{result.required} {t.requirements} · {t.fit}</span>
+          <span className="kicker">{t.fitLabel}</span>
           <p>{result.verdict}</p>
         </div>
       </div>
@@ -44,7 +44,14 @@ export function MatchView({ result, lang, compact, onGo }: { result: MatchResult
             <ul>{result.missing.map(item => <li key={item.id} className="is-missing"><strong>{item.label}</strong></li>)}</ul>
           </div>
         )}
+        {result.unrecognized.length > 0 && (
+          <div>
+            <h4>? {t.unrecognized}</h4>
+            <p className="match-note">{result.unrecognized.join(' · ')}</p>
+          </div>
+        )}
       </div>
+      {!compact && <p className="match-method">{t.method(result.vocabulary)}</p>}
     </div>
   )
 }

@@ -27,8 +27,23 @@ type LinkedIn = {
   education: { school: string; degree: string; startYear: number | null; endYear: number | null }[]
 }
 
+// ---------- generalização de dados corporativos (src/data/redactions.json) ----------
+// Aplicada também aqui, além do importador, para o caso de o JSON ter sido gerado por um assistente.
+type Rule = { pattern: string; replace: string; flags?: string }
+const rulesFile = import.meta.glob<{ default: { pt: Rule[]; en: Rule[] } }>('./redactions.json', { eager: true })
+export const redactionRules = Object.values(rulesFile)[0]?.default ?? { pt: [], en: [] }
+export const redact = (text: string, lang: 'pt' | 'en' = 'pt') =>
+  redactionRules[lang].reduce((out, rule) => out.replace(new RegExp(rule.pattern, rule.flags ?? 'g'), rule.replace), text)
+function redactDeep<T>(value: T): T {
+  if (typeof value === 'string') return redact(value) as T
+  if (Array.isArray(value)) return value.map(redactDeep) as T
+  if (value && typeof value === 'object') return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, k === 'source' ? v : redactDeep(v)])) as T
+  return value
+}
+
 const found = import.meta.glob<{ default: LinkedIn }>('./linkedin.json', { eager: true })
-const linkedin: LinkedIn | null = Object.values(found)[0]?.default ?? null
+const rawLinkedin: LinkedIn | null = Object.values(found)[0]?.default ?? null
+const linkedin: LinkedIn | null = rawLinkedin ? redactDeep(rawLinkedin) : null
 
 // ---------- memória de tradução PT → EN ----------
 // Chave = texto exato do LinkedIn. Se faltar tradução, o texto em PT é usado no modo EN
@@ -39,7 +54,7 @@ export const pendingTranslations: { where: string; pt: string }[] = []
 function translate(pt: string, where: string, fallback?: string): string {
   if (!pt) return fallback ?? ''
   const en = memory[pt]
-  if (en) return en
+  if (en) return redact(en, 'en')
   if (fallback) return fallback
   pendingTranslations.push({ where, pt })
   return pt

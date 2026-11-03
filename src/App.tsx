@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { profile, experiences, education, allSkills, research, courses, languages, headlines, dataSource, firstYear, longestCompany, distributionCenters, postgrads, type Lang, type Experience } from './data/resume'
 import { copy } from './i18n'
 import type { AgentAction } from './agent/agent'
@@ -49,6 +49,13 @@ export default function App() {
   const [theme, setTheme] = useState<Theme>(() => (themes.find(item => item === read('fc-cv-theme')) ?? 'midnight'))
   const [mode, setMode] = useState<Mode | null>(() => (read('fc-cv-mode') as Mode | null))
   const [agentOpen, setAgentOpen] = useState(false)
+  const fabRef = useRef<HTMLButtonElement>(null)
+  const wasOpen = useRef(false)
+  // acessibilidade: ao fechar o agente, o foco volta para o botão que o abriu
+  useEffect(() => {
+    if (wasOpen.current && !agentOpen) fabRef.current?.focus()
+    wasOpen.current = agentOpen
+  }, [agentOpen])
   const [question, setQuestion] = useState<{ text: string; nonce: number } | null>(null)
   const [terminalOpen, setTerminalOpen] = useState(false)
   const [toasts, setToasts] = useState<{ id: number; title: string; body: string; icon: string }[]>([])
@@ -73,7 +80,8 @@ export default function App() {
     toast(copy[lang].unlocked + ' · +' + item.xp + ' XP', item[lang][0], item.icon)
   }, [lang, toast])
   const { unlocked, unlock, reset, xp } = useAchievements(onUnlock)
-  const gamified = mode !== 'recruiter'
+  // padrão = leitura direta; a gamificação só liga quando o visitante escolhe o modo agente
+  const gamified = mode === 'agent'
   const award = (id: AchievementId) => { if (gamified) unlock(id) }
 
   useEffect(() => {
@@ -247,6 +255,14 @@ export default function App() {
         </header>
 
         <main id="conteudo">
+          {mode === null && (
+            <aside className="intro-banner" aria-label={t.onboardingTitle}>
+              <span className="agent-avatar" aria-hidden="true"><i /></span>
+              <p><strong>{t.bannerTitle}</strong> {t.bannerText}</p>
+              <button className="btn btn-primary btn-sm" onClick={() => chooseMode('agent')}>✦ {t.onboardingPlay}</button>
+              <button className="icon-btn" onClick={() => chooseMode('recruiter')} aria-label={t.close}>×</button>
+            </aside>
+          )}
           {/* ---------- HERO ---------- */}
           <section className="hero" id="inicio" data-nav>
             <div className="hero-grid" aria-hidden="true" />
@@ -254,7 +270,7 @@ export default function App() {
               <div className="hero-copy">
                 <p className="status"><b className="live-dot" /> {t.agentOnline} · Serra, ES</p>
                 <h1>Filipe<br /><span>Carneiro da Silva</span></h1>
-                <p className="typed" aria-label={headlines[lang].join(' · ')}><span aria-hidden="true">{typed}</span><i aria-hidden="true">▍</i></p>
+                <p className="typed"><span className="sr-only">{headlines[lang].join(' · ')}</span><span aria-hidden="true">{typed}</span><i aria-hidden="true">▍</i></p>
                 <p className="statement">{t.statement}</p>
                 <p className="intro">{t.intro}</p>
                 <div className="hero-cta">
@@ -445,7 +461,7 @@ export default function App() {
           <span>{t.footer}{dataSource.importedAt && ` · ${lang === 'pt' ? 'dados do LinkedIn de' : 'LinkedIn data from'} ${new Date(dataSource.importedAt).toLocaleDateString(lang === 'pt' ? 'pt-BR' : 'en-US')}`}</span>
           <span className="footer-actions">
             <button onClick={() => setTerminalOpen(true)}>&gt;_ {t.terminal}</button>
-            <button onClick={() => { setMode(null) }}>{t.changeMode}</button>
+            <button onClick={() => chooseMode(gamified ? 'recruiter' : 'agent')}>{gamified ? t.onboardingRead : '✦ ' + t.onboardingPlay}</button>
           </span>
         </footer>
 
@@ -455,7 +471,7 @@ export default function App() {
       </div>
 
       {!agentOpen && (
-        <button className="agent-fab" onClick={() => openAgent()} aria-label={t.askAgent}>
+        <button ref={fabRef} className="agent-fab" onClick={() => openAgent()} aria-label={t.askAgent}>
           <span className="agent-avatar" aria-hidden="true"><i /></span><span className="fab-label">{t.askAgent}</span>
         </button>
       )}
@@ -469,21 +485,6 @@ export default function App() {
         question={question}
       />
       {terminalOpen && <Terminal lang={lang} onClose={() => setTerminalOpen(false)} onAction={onAction} onOpenAgent={() => openAgent()} onUse={() => award('terminal')} />}
-
-      {mode === null && (
-        <div className="overlay">
-          <section className="onboarding" role="dialog" aria-modal="true" aria-labelledby="onb-title">
-            <span className="agent-avatar big" aria-hidden="true"><i /></span>
-            <h2 id="onb-title">{t.onboardingTitle}</h2>
-            <p>{t.onboardingText}</p>
-            <div className="onb-options">
-              <button onClick={() => chooseMode('recruiter')}><strong>{t.onboardingRead}</strong><small>{t.onboardingReadHint}</small></button>
-              <button className="primary" onClick={() => chooseMode('agent')}><strong>✦ {t.onboardingPlay}</strong><small>{t.onboardingPlayHint}</small></button>
-            </div>
-            <button className="lang-btn" onClick={() => setLang(lang === 'pt' ? 'en' : 'pt')}>{lang === 'pt' ? 'English version' : 'Versão em português'}</button>
-          </section>
-        </div>
-      )}
 
       <div className="toasts" aria-live="polite">
         {toasts.map(item => <div className="toast" key={item.id}><span>{item.icon}</span><div><strong>{item.title}</strong><small>{item.body}</small></div></div>)}

@@ -7,6 +7,6 @@ Se um PDF for enviado, o deploy é bloqueado pelo `check:privacy` e o site conti
 Como atualizar:
 
 - **Com um assistente (Claude/ChatGPT):** envie o PDF + `src/data/linkedin.json` + `src/data/translations.json`
-  e use a skill `.github/skills/atualizar-curriculo-linkedin`. Suba no GitHub só os 2 JSON que ele devolver.
+  e use a skill `.github/skills/atualizar-curriculo-linkedin` (ela aplica também as regras de `src/data/redactions.json`). Suba no GitHub só os 2 JSON que ele devolver.
 - **No seu computador:** coloque o PDF aqui (esta pasta ignora PDFs no `.gitignore`), rode
   `npm run linkedin:import` e depois `npm run check`. O importador lista os textos sem tradução para o inglês.

@@ -38,3 +38,9 @@ export const extraSkills = [
     items: ['Inteligência Artificial', 'Agentes de IA', 'Automação de processos', 'Segurança da Informação'],
   },
 ]
+
+// Quantos bullets de cada experiência entram no PDF ATS (o site sempre mostra todos).
+// Cargo atual: todos. Experiências desde `recentSince`: `recent`. Mais antigas: `older`.
+export const atsHighlights = { current: Infinity, recentSince: 2022, recent: 3, older: 2 }
+// Resumo no PDF: 1º parágrafo + os 2 últimos (foco e áreas de atuação). O site mostra o resumo completo.
+export const atsSummary = { first: 1, last: 2 }
