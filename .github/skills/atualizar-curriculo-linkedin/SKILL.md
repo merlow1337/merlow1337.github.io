@@ -1,14 +1,15 @@
 ---
 name: atualizar-curriculo-linkedin
-description: Atualiza o site de currículo srcarneiro1.github.io a partir do PDF exportado do LinkedIn. Gera src/data/linkedin.json e atualiza a versão em inglês em src/data/curriculum.ts, sem expor telefone ou contato. Use quando o usuário enviar o PDF do LinkedIn e pedir para atualizar o currículo ou o site.
+description: Atualiza o site de currículo srcarneiro1.github.io a partir do PDF exportado do LinkedIn. Gera src/data/linkedin.json e completa a memória de tradução src/data/translations.json, sem expor telefone ou contato. Use quando o usuário enviar o PDF do LinkedIn e pedir para atualizar o currículo ou o site.
 ---
 
 # Atualizar currículo a partir do PDF do LinkedIn
 
-Você atualiza os dados do site de currículo de Filipe Carneiro da Silva. O site é em React/TypeScript e lê dois arquivos:
+Você atualiza os dados do site de currículo de Filipe Carneiro da Silva. O site é em React/TypeScript e lê estes arquivos:
 
 - `src/data/linkedin.json`: dados em português extraídos do PDF do LinkedIn. É a fonte da verdade.
-- `src/data/curriculum.ts`: traduções para inglês, tags e área de cada experiência.
+- `src/data/translations.json`: memória de tradução PT → EN (chave = texto exato do LinkedIn).
+- `src/data/curriculum.ts`: tags, área de cada experiência, e-mail e links (não precisa mexer na maioria das atualizações).
 
 ### Regras de privacidade (obrigatórias)
 
@@ -57,43 +58,28 @@ Regras de extração:
 - O PDF às vezes cola frases ("processos.Minha"). Coloque espaço depois do ponto.
 - Ignore rodapés como "Page 2 of 7".
 
-### Tarefa 2: atualizar `curriculum.ts` (versão em inglês)
+### Tarefa 2: completar `translations.json` (versão em inglês)
 
-Compare o JSON novo com o anterior e liste o que mudou: experiências novas, removidas, cargos e descrições alterados, certificações e idiomas.
+O site traduz por memória: `src/data/translations.json` tem `{ "entries": { "<texto PT exato do linkedin.json>": "<tradução EN>" } }`.
 
-Para cada experiência **nova ou alterada**, adicione ou atualize um objeto no array `experiences` do `curriculum.ts`, seguindo o padrão das entradas existentes:
-
-```ts
-{
-  id: 'slug-curto',
-  company: 'Empresa',
-  position: { pt: 'Cargo', en: 'Job title' },
-  period: { pt: 'nov 2025 — atual', en: 'Nov 2025 — Present' },
-  location: { pt: 'Serra, ES', en: 'Serra, Brazil' },
-  summary: { pt: '1–2 frases', en: '1–2 sentences' },
-  highlights: { pt: ['...'], en: ['tradução de cada bullet'] },
-  tags: ['3 a 5 ferramentas/temas'],
-  focus: 'operations', // operations | data | leadership | research
-},
-```
-
-- Traduza para inglês profissional e fiel, sem exagerar.
-- A ordem do array deve ser a mesma do LinkedIn (mais recente primeiro).
-- Se a formação mudou, atualize `education`, incluindo `degree.en`.
-- Se o resumo mudou bastante, atualize `profile.summary.en`.
-- Não altere `email`, `linkedin`, `github` nem `research`.
+- Para cada texto do novo `linkedin.json` que **não** existe como chave em `entries` (cada parágrafo do `summary` separado por `\n\n`, o `headline`, e de cada experiência o `position`, o `description` e cada item de `highlights`, mais cada `degree` da formação), adicione a entrada com a tradução.
+- A chave precisa ser **idêntica, caractere por caractere**, ao texto do JSON. Se mudar uma vírgula, a tradução não é encontrada.
+- Traduza para inglês profissional e fiel, sem inventar responsabilidades ou números.
+- Mantenha as entradas existentes. Pode remover as que não correspondem mais a nenhum texto.
+- `curriculum.ts` só muda se houver experiência **nova** e você quiser definir `tags` e `focus` (sem isso, o site infere automaticamente).
 
 ### Formato da resposta
 
 1. Um resumo curto do que mudou.
 2. O arquivo completo `src/data/linkedin.json`.
-3. O arquivo completo `src/data/curriculum.ts`.
-4. Um lembrete: subir os 2 arquivos no GitHub (Add file → Upload files, na pasta `src/data/`), **sem enviar o PDF**, e conferir o site depois de 1–2 minutos.
+3. O arquivo completo `src/data/translations.json`.
+4. Um lembrete: subir os 2 arquivos no GitHub (Add file → Upload files, na pasta `src/data/`), **sem enviar o PDF**. O GitHub roda os testes: se algo estiver inconsistente ou com dado pessoal, o deploy é bloqueado e o site continua na versão anterior. Confira a aba **Actions**; avisos de "Tradução pendente" indicam textos que faltou traduzir.
 
 ## Arquivos de entrada esperados
 
 - PDF do LinkedIn (perfil → Recursos → Salvar como PDF)
 - `src/data/linkedin.json` atual
-- `src/data/curriculum.ts` atual
+- `src/data/translations.json` atual
 
 Se faltar algum arquivo, peça antes de começar. Sem o `linkedin.json` anterior, trate todas as experiências como novas.
+Nunca peça nem aceite que o PDF seja enviado ao GitHub.
