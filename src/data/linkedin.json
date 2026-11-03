@@ -1,0 +1,277 @@
+{
+  "source": {
+    "file": "Profile.pdf",
+    "pages": 7,
+    "importedAt": "2026-11-03T01:33:23.615Z"
+  },
+  "name": "Filipe Carneiro da Silva",
+  "headline": "Gestão de Processos e Inventários | Eficiência Operacional | Business Intelligence & Análise de Dados | Automação | Python · SQL · Power BI",
+  "location": "Serra, Espírito Santo, Brasil",
+  "summary": "Sou profissional de gestão de processos e operações logísticas, com experiência em supervisão de inventários, eficiência operacional, Business Intelligence (BI), análise de dados e automação de processos.\n\nMinha trajetória inclui atuação em ambientes logísticos industriais, portuários e multiclientes, com experiência em planejamento operacional, gestão de estoques, conciliação físico-sistêmica, dimensionamento de recursos, monitoramento de indicadores de desempenho (KPIs), análise de custos e melhoria contínua.\n\nNa Suzano, desenvolvi minha carreira da área de transportes até a posição de Analista de Operações Logísticas Sênior, atuando no planejamento dos fluxos logísticos, gestão de estoques, análise de indicadores e otimização de processos com apoio de tecnologias e ferramentas analíticas.\n\nNa Unilog Express, atuo na supervisão de processos e inventários, planejamento de capacidade, elaboração de forecasts, análise de headcount e acompanhamento do desempenho operacional.\n\nTambém desenvolvo aplicações, painéis analíticos e automações para apoiar a gestão, melhorar a confiabilidade das informações e reduzir atividades manuais. Possuo experiência com Power BI, Power Query, Excel avançado, SQL, Python, JavaScript, TypeScript, GitHub, APIs e sistemas de gestão como SAP e WMS.\n\nSou bacharel em Arquivologia pela Universidade Federal do Espírito Santo (UFES), com pós-graduações em Inteligência Artificial e Segurança da Informação. Atuei como pesquisador de iniciação científica com financiamento do CNPq, utilizando análise e visualização de dados para investigar relações arquivísticas.\n\nMeu foco profissional é conectar operações, processos, dados e tecnologia, desenvolvendo soluções que contribuam para a eficiência, a rastreabilidade, a qualidade da informação e a tomada de decisão.\n\nÁreas de atuação: Gestão de Processos | Gestão de Inventários | Logística | Eficiência Operacional | Business Intelligence | Análise de Dados | Automação de Processos | Melhoria Contínua.",
+  "topSkills": [
+    "Logística e Distribuição",
+    "Gestão de Centros de Distribuição",
+    "Soluções para relatórios gerenciais"
+  ],
+  "languages": [
+    {
+      "name": "English",
+      "level": "Full Professional"
+    },
+    {
+      "name": "Português",
+      "level": "Native or Bilingual"
+    }
+  ],
+  "certifications": [
+    "Intensive English",
+    "Núcleo de Ciências",
+    "Inglês Intermediário",
+    "Diploma de Reconhecimento como Titular do Conselho Escolar",
+    "Academia ciência de dados 2024"
+  ],
+  "honors": [],
+  "experience": [
+    {
+      "company": "Unilog Express",
+      "position": "Supervisor de Processos e Inventário",
+      "periodRaw": "novembro de 2025 - Present",
+      "start": {
+        "year": 2025,
+        "month": 11
+      },
+      "end": null,
+      "location": "Serra, Espírito Santo, Brasil",
+      "description": "Supervisão de processos, inventários e eficiência operacional em ambiente logístico multiclientes, com atuação no controle de estoques, planejamento de recursos, análise de dados e melhoria contínua.",
+      "highlights": [
+        "Gestão de inventários cíclicos e gerais, incluindo planejamento, dimensionamento de equipes, contagens, conciliação físico-sistêmica, análise de divergências e planos de ação.",
+        "Análise e controle de estoques de 24 depositantes ativos, abrangendo aproximadamente 6.460 SKUs.",
+        "Elaboração de Curvas ABC, análises de movimentação e dimensionamento de posições de picking para implantações, mudanças de galpão e reestruturações operacionais.",
+        "Desenvolvimento de forecasts mensais e sazonais para planejamento de capacidade produtiva, dimensionamento de headcount, FTEs e alocação de recursos.",
+        "Monitoramento de indicadores de desempenho (KPIs), análise de desvios, acompanhamento de FCAs e elaboração de relatórios gerenciais.",
+        "Mapeamento e melhoria contínua de processos logísticos, abrangendo recebimento (inbound), armazenagem, separação, conferência e expedição (outbound).",
+        "Validação de informações em Business Intelligence (BI) e acompanhamento de correções e evoluções sistêmicas.",
+        "Análise de custos operacionais, sazonalidade e necessidades de recursos adicionais.",
+        "Gestão da equipe de inventário, com acompanhamento de desempenho, entregas e desenvolvimento dos colaboradores."
+      ]
+    },
+    {
+      "company": "Seatrium",
+      "position": "Analista de Logística Pleno",
+      "periodRaw": "junho de 2025 - novembro de 2025",
+      "start": {
+        "year": 2025,
+        "month": 6
+      },
+      "end": {
+        "year": 2025,
+        "month": 11
+      },
+      "location": "Aracruz, Espírito Santo, Brasil",
+      "description": "Atuação em processos de logística integrada, importação, exportação e operações portuárias, com foco em planejamento operacional, controle de informações, indicadores de desempenho e melhoria contínua.",
+      "highlights": [
+        "Análise de indicadores logísticos (KPIs), acompanhamento de metas operacionais e elaboração de relatórios técnicos e apresentações executivas.",
+        "Apoio ao planejamento de importação e exportação, incluindo interface com operações portuárias e controle de processos físicos.",
+        "Atualização e controle de informações operacionais nos sistemas SAP, ALCIS, WMS e Excel avançado.",
+        "Coordenação de auditorias internas e externas relacionadas aos processos logísticos.",
+        "Elaboração e padronização de procedimentos operacionais, com participação em iniciativas de melhoria contínua.",
+        "Desenvolvimento e condução de treinamentos internos para padronização das rotinas logísticas.",
+        "Elaboração de packing lists e acompanhamento de controles documentais e operacionais."
+      ]
+    },
+    {
+      "company": "Suzano",
+      "position": "Analista de Operações Logísticas Sênior",
+      "periodRaw": "julho de 2024 - junho de 2025",
+      "start": {
+        "year": 2024,
+        "month": 7
+      },
+      "end": {
+        "year": 2025,
+        "month": 6
+      },
+      "location": "Aracruz, Espírito Santo, Brasil",
+      "description": "Atuação na gestão e no planejamento de operações logísticas industriais, com foco na integração entre produção, armazenagem, transporte rodoviário e operações portuárias destinadas ao mercado externo.",
+      "highlights": [
+        "Planejamento dos fluxos logísticos entre produção e porto, com análise de capacidade, programação de expedições e interface entre os modais rodoviário e portuário.",
+        "Gestão de estoques e inventários, incluindo acompanhamento de planos de reprocessamento produtivo, análise de impactos operacionais e otimização de recursos.",
+        "Desenvolvimento, análise e monitoramento de indicadores de desempenho (KPIs) para acompanhamento das operações e suporte à tomada de decisão.",
+        "Mapeamento e melhoria contínua de processos, utilizando análise de dados, ETL, mineração de dados e automação de controles.",
+        "Utilização de Python, SQL, Power BI, Excel avançado e SAP para análise de informações e apoio à gestão logística.",
+        "Acompanhamento de processos auditáveis, conformidade operacional e iniciativas de melhoria de desempenho.",
+        "Condução de projetos e atuação junto a equipes multidisciplinares para resolução de problemas e melhoria da eficiência operacional."
+      ]
+    },
+    {
+      "company": "Suzano",
+      "position": "Analista de Logística e Distribuição I - Imigrantes",
+      "periodRaw": "maio de 2024 - julho de 2024",
+      "start": {
+        "year": 2024,
+        "month": 5
+      },
+      "end": {
+        "year": 2024,
+        "month": 7
+      },
+      "location": "São Paulo, Brasil",
+      "description": "Atuação na análise e consolidação de indicadores de desempenho logístico (KPIs), com suporte à gestão de 6 coordenadores e 1 gerência da UNPE, abrangendo uma estrutura de 23 Centros de Distribuição.",
+      "highlights": [
+        "Monitoramento e análise de indicadores operacionais de 23 Centros de Distribuição, consolidando dados para acompanhamento de resultados, identificação de desvios e suporte à tomada de decisão.",
+        "Estruturação de relatórios e informações gerenciais para apoio às rotinas de gestão e acompanhamento de desempenho dos coordenadores e da gerência.",
+        "Coleta, tratamento, consolidação e organização de dados operacionais para elaboração de apresentações gerenciais e reuniões de resultados.",
+        "Acompanhamento e controle de documentação dos Centros de Distribuição, contribuindo para a organização documental e o acompanhamento de requisitos de regularidade operacional.",
+        "Continuidade das atividades de análise de dados, gestão de indicadores, acompanhamento de estoques e melhoria de processos anteriormente desenvolvidas no Centro de Distribuição de Serra.",
+        "Utilização de sistemas corporativos e ferramentas de análise de dados para elaboração de relatórios, controle de informações e suporte à gestão logística."
+      ]
+    },
+    {
+      "company": "Suzano",
+      "position": "Analista de Logística e Distribuição I - Serra",
+      "periodRaw": "junho de 2023 - maio de 2024",
+      "start": {
+        "year": 2023,
+        "month": 6
+      },
+      "end": {
+        "year": 2024,
+        "month": 5
+      },
+      "location": "Espírito Santo, Brasil",
+      "description": "Atuação na gestão e análise de processos de logística e distribuição, com foco em controle de estoques, inventários, indicadores operacionais e melhoria contínua.",
+      "highlights": [
+        "Desenvolvimento e acompanhamento de indicadores de desempenho (KPIs) para controle das operações logísticas.",
+        "Análise de dados operacionais para identificação de desvios, oportunidades de melhoria e otimização de processos.",
+        "Acompanhamento de inventários rotativos e oficiais, contribuindo para a confiabilidade dos registros de estoque.",
+        "Participação em auditorias e processos de certificação relacionados à operação logística.",
+        "Utilização do sistema SAP e de ferramentas de análise e automação para acompanhamento e controle de processos.",
+        "Participação em projetos de melhoria operacional, padronização e resolução de problemas."
+      ]
+    },
+    {
+      "company": "Suzano",
+      "position": "Auxiliar de Transportes",
+      "periodRaw": "março de 2022 - junho de 2023",
+      "start": {
+        "year": 2022,
+        "month": 3
+      },
+      "end": {
+        "year": 2023,
+        "month": 6
+      },
+      "location": "Espírito Santo, Brasil",
+      "description": "Atuação em rotinas administrativas e operacionais de transportes, com foco em faturamento, controle documental e suporte aos fluxos logísticos.",
+      "highlights": [
+        "Acompanhamento dos processos de faturamento de cargas, entrada de notas fiscais e liberação de pagamentos.",
+        "Conferência e controle de informações operacionais e documentos relacionados ao transporte.",
+        "Elaboração de relatórios de cargas e acompanhamento das rotinas logísticas.",
+        "Utilização do SAP para registro, acompanhamento e controle das operações."
+      ]
+    },
+    {
+      "company": "Universidade Federal do Espírito Santo (Oficial)",
+      "position": "Pesquisador",
+      "periodRaw": "setembro de 2023 - agosto de 2024",
+      "start": {
+        "year": 2023,
+        "month": 9
+      },
+      "end": {
+        "year": 2024,
+        "month": 8
+      },
+      "location": "Vitória, Espírito Santo, Brasil",
+      "description": "Atuação em pesquisa de iniciação científica financiada pelo Conselho Nacional de Desenvolvimento Científico e Tecnológico (CNPq), no projeto \"Análise de Vínculo Arquivístico em Acervos Arquivísticos por meio de Análise de Redes de Informação\".",
+      "highlights": [
+        "Desenvolvimento de pesquisa científica com metodologia de estudo de caso, voltada à análise de vínculos arquivísticos.",
+        "Coleta, tratamento, organização e análise de dados de acervos documentais.",
+        "Utilização de OpenRefine para preparação e tratamento de dados.",
+        "Utilização de Gephi para modelagem, análise e visualização de redes de informação.",
+        "Aplicação de métodos de análise de redes para investigação de relações entre documentos e informações arquivísticas."
+      ]
+    },
+    {
+      "company": "Le Card - Administradora de Cartões",
+      "position": "Auxiliar Administrativo",
+      "periodRaw": "outubro de 2021 - março de 2022",
+      "start": {
+        "year": 2021,
+        "month": 10
+      },
+      "end": {
+        "year": 2022,
+        "month": 3
+      },
+      "location": "Espírito Santo, Brasil",
+      "description": "Atuação em rotinas administrativas, atendimento e suporte operacional, com foco na organização de processos e resolução de demandas.",
+      "highlights": [
+        "Execução e acompanhamento de atividades administrativas e controles operacionais.",
+        "Atendimento e suporte a clientes e à rede credenciada por diferentes canais de comunicação.",
+        "Identificação de necessidades, tratamento de solicitações e apoio à resolução de problemas."
+      ]
+    },
+    {
+      "company": "Sollo Brasil",
+      "position": "Monitor de Treinamento Junior",
+      "periodRaw": "junho de 2021 - setembro de 2021",
+      "start": {
+        "year": 2021,
+        "month": 6
+      },
+      "end": {
+        "year": 2021,
+        "month": 9
+      },
+      "location": "Vitória, Espírito Santo, Brazil",
+      "description": "Atuação em treinamento e suporte à supervisão, com foco na capacitação de colaboradores, padronização de procedimentos e acompanhamento de rotinas administrativas.",
+      "highlights": [
+        "Planejamento e condução de treinamentos técnicos e comportamentais.",
+        "Apoio à supervisão em rotinas administrativas, incluindo controle de ponto e gestão de férias.",
+        "Acompanhamento de padrões de qualidade e necessidades de capacitação das equipes."
+      ]
+    },
+    {
+      "company": "iVOX Contact Center",
+      "position": "Assistente de Treinamento e Qualidade",
+      "periodRaw": "abril de 2020 - junho de 2021",
+      "start": {
+        "year": 2020,
+        "month": 4
+      },
+      "end": {
+        "year": 2021,
+        "month": 6
+      },
+      "location": "Vitória, Espírito Santo, Brasil",
+      "description": "Atuação em treinamento, monitoramento de qualidade e melhoria de processos de atendimento, com foco no desenvolvimento de equipes e na eficiência operacional.",
+      "highlights": [
+        "Planejamento e implementação de programas de treinamento técnico e comportamental.",
+        "Realização de monitorias de qualidade, avaliação de atendimentos e elaboração de feedbacks.",
+        "Produção de relatórios e análises de desempenho para suporte à gestão.",
+        "Participação em iniciativas de otimização e automação de processos operacionais."
+      ]
+    }
+  ],
+  "education": [
+    {
+      "school": "Faculdade de Minas",
+      "degree": "Pós-graduação Lato Sensu, Inteligência Artificial Premium",
+      "startYear": 2025,
+      "endYear": 2025
+    },
+    {
+      "school": "Faculdade de Minas",
+      "degree": "Pós-graduação Lato Sensu, Segurança da Informação",
+      "startYear": 2025,
+      "endYear": 2025
+    },
+    {
+      "school": "Universidade Federal do Espírito Santo (Oficial)",
+      "degree": "Bacharel em Arquivologia, Gestão de Documentos e Arquivos",
+      "startYear": 2019,
+      "endYear": 2024
+    }
+  ]
+}

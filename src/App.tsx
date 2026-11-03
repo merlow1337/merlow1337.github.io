@@ -1,419 +1,516 @@
-import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
-import { profile, experiences, education, skills, research, type Lang } from './data/curriculum'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { profile, experiences, education, allSkills, research, courses, languages, headlines, dataSource, type Lang, type Experience } from './data/resume'
+import { copy } from './i18n'
+import type { AgentAction } from './agent/agent'
+import { AgentDock } from './components/AgentDock'
+import { JobCopilot } from './components/JobCopilot'
+import { SkillGraph } from './components/SkillGraph'
+import { Terminal } from './components/Terminal'
+import { useAchievements, achievementList, maxXp, type AchievementId } from './hooks/useAchievements'
 
 type Theme = 'midnight' | 'light' | 'neon'
-type SectionName = 'overview' | 'experience' | 'education' | 'skills' | 'research'
-const copy = {
-  pt: {
-    nav: ['Início', 'Trajetória', 'Formação', 'Competências', 'Pesquisa'],
-    top: 'CURRICULUM / 2026',
-    eyebrow: 'CURRÍCULO INTERATIVO',
-    subline: 'Uma trajetória conectando processos, dados e tecnologia.',
-    intro: 'Minha atuação combina visão operacional, análise de informações e construção de soluções para problemas reais de negócio.',
-    cv: 'Exportar currículo ATS',
-    printHint: 'Para obter o PDF, escolha “Salvar como PDF” na janela de impressão.',
-    explore: 'Explorar trajetória',
-    info: 'Visão geral',
-    summary: 'Perfil profissional',
-    milestones: 'Destaques da trajetória',
-    milestoneLabels: ['Centros de Distribuição acompanhados', 'Etapas profissionais na Suzano', 'Pós-graduações lato sensu'],
-    career: 'Experiência profissional',
-    careerDesc: 'Responsabilidades, contexto e entregas. Selecione uma área ou pesquise por tecnologia, empresa ou atividade.',
-    query: 'Buscar por empresa, ferramenta ou atividade...',
-    filters: ['Tudo', 'Operações', 'Dados', 'Gestão', 'Pesquisa'],
-    details: 'Ver contribuições', hide: 'Ocultar contribuições',
-    academic: 'Formação acadêmica',
-    expertise: 'Competências',
-    expertiseDesc: 'Explore cada área para visualizar conhecimentos e exemplos de aplicação.',
-    evidence: 'Aplicação profissional',
-    examples: [
-      'Inventários, planejamento de capacidade, logística portuária e gestão de processos em operações multiclientes e industriais.',
-      'KPIs, análise e consolidação de informações, Power BI, SQL, Python e ferramentas de BI.',
-      'Aplicações, integrações e automação de processos com JavaScript, TypeScript e tecnologias web.',
-    ],
-    research: 'Pesquisa científica',
-    researchBtn: 'Consultar pesquisa pública',
-    reach: 'Contato profissional',
-    footer: 'Currículo digital • Informações organizadas a partir do histórico profissional',
-    theme: 'Tema', themeNames: { midnight: 'Escuro', light: 'Claro', neon: 'Neon' },
-    terminal: 'Terminal', terminalTip: 'Digite help para consultar os comandos disponíveis.',
-    terminalPrompt: 'Digite um comando...', close: 'Fechar',
-    welcome: 'Currículo interativo de Filipe Carneiro. Digite help para começar.',
-    commands: 'Comandos: help, about, experience, education, skills, research, contact, pdf, clear, exit',
-    unknown: 'Comando não reconhecido. Digite help.',
-    pdfHelp: 'A janela de impressão permite salvar um PDF com estrutura ATS.',
-    notFound: 'Nenhuma experiência encontrada para esse filtro.',
-    privacy: 'O PDF de candidatura não inclui foto, temas visuais ou componentes interativos.',
-    lang: 'Alterar idioma para inglês',
-    resume: 'Resumo profissional',
-    work: 'Experiência profissional',
-    school: 'Formação acadêmica',
-    talent: 'Competências profissionais e técnicas',
-    searchLabel: 'Busca de experiências',
-    detailTitle: 'Principais atividades',
-    year: '2026',
-    photoPending: 'FOTO EM PREPARAÇÃO',
-    openMenu: 'Abrir navegação',
-    clear: 'Limpar busca',
-  },
-  en: {
-    nav: ['Home', 'Career', 'Education', 'Skills', 'Research'],
-    top: 'CURRICULUM / 2026',
-    eyebrow: 'INTERACTIVE RESUME',
-    subline: 'A career connecting processes, data and technology.',
-    intro: 'I bring together operational insight, information analysis and the development of solutions to real business problems.',
-    cv: 'Export ATS resume',
-    printHint: 'Select “Save as PDF” in the print dialog.',
-    explore: 'Explore experience',
-    info: 'Overview',
-    summary: 'Professional profile',
-    milestones: 'Career highlights',
-    milestoneLabels: ['Distribution centers monitored', 'Positions held at Suzano', 'Postgraduate specializations'],
-    career: 'Professional experience',
-    careerDesc: 'Responsibilities, context and contributions. Filter by area or search for tools, employers or activities.',
-    query: 'Search employer, tool or activity...',
-    filters: ['All', 'Operations', 'Data', 'Leadership', 'Research'],
-    details: 'View contributions', hide: 'Hide contributions',
-    academic: 'Education',
-    expertise: 'Skills',
-    expertiseDesc: 'Select an area to explore skills and related work examples.',
-    evidence: 'Professional application',
-    examples: [
-      'Inventory, capacity planning, port logistics and process management in industrial and multi-client operations.',
-      'KPIs, data consolidation, Power BI, SQL, Python and business intelligence tools.',
-      'Applications, integrations and process automation using JavaScript, TypeScript and web technologies.',
-    ],
-    research: 'Scientific research',
-    researchBtn: 'View public research',
-    reach: 'Professional contact',
-    footer: 'Digital resume • Information organized from professional employment history',
-    theme: 'Theme', themeNames: { midnight: 'Dark', light: 'Light', neon: 'Neon' },
-    terminal: 'Terminal', terminalTip: 'Type help to see the available commands.',
-    terminalPrompt: 'Enter a command...', close: 'Close',
-    welcome: "Filipe Carneiro's interactive resume. Type help to get started.",
-    commands: 'Commands: help, about, experience, education, skills, research, contact, pdf, clear, exit',
-    unknown: 'Unknown command. Type help.',
-    pdfHelp: 'The print dialog lets you save an ATS-readable PDF.',
-    notFound: 'No experience matched this filter.',
-    privacy: 'The application PDF does not include photos, visual themes or interactive elements.',
-    lang: 'Mudar idioma para português',
-    resume: 'Professional summary',
-    work: 'Work experience',
-    school: 'Education',
-    talent: 'Professional and technical skills',
-    searchLabel: 'Search experience',
-    detailTitle: 'Key responsibilities',
-    year: '2026',
-    photoPending: 'PHOTO TO BE ADDED',
-    openMenu: 'Open navigation',
-    clear: 'Clear search',
-  },
-} as const
+type Mode = 'recruiter' | 'agent'
+const themes: Theme[] = ['midnight', 'light', 'neon']
+const startYear = (exp: Experience) => Number(/\d{4}/.exec(exp.period.pt)?.[0] ?? 0)
+const firstYear = Math.min(...experiences.map(startYear))
 
-const icons = {
-  arrow: '↗',
-  down: '↓',
-  command: '>_',
+const read = (key: string) => { try { return localStorage.getItem(key) } catch { return null } }
+const write = (key: string, value: string) => { try { localStorage.setItem(key, value) } catch { /* opcional */ } }
+const reduceMotion = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+
+function useTyped(lines: readonly string[]) {
+  const [text, setText] = useState(lines[0])
+  useEffect(() => {
+    if (reduceMotion()) { setText(lines[0]); return }
+    let line = 0, char = lines[0].length, deleting = true, timer = 0
+    const tick = () => {
+      const current = lines[line]
+      if (deleting) {
+        char--
+        if (char <= 0) { deleting = false; line = (line + 1) % lines.length }
+      } else {
+        char++
+        if (char >= lines[line].length) { deleting = true; setText(lines[line]); timer = window.setTimeout(tick, 2300); return }
+      }
+      setText((deleting ? current : lines[line]).slice(0, Math.max(0, char)))
+      timer = window.setTimeout(tick, deleting ? 28 : 55)
+    }
+    timer = window.setTimeout(tick, 2600)
+    return () => clearTimeout(timer)
+  }, [lines])
+  return text
 }
 
 function ATSResume({ lang }: { lang: Lang }) {
   const t = copy[lang]
-  const local = (value: { pt: string; en: string }) => value[lang]
   return (
-    <article className="ats-document" aria-label={t.cv}>
-      <header className="ats-heading">
-        <h1>{profile.name}</h1>
-        <p>{profile.location} | {profile.email}</p>
-        <p>{profile.linkedin}</p>
-      </header>
-      <section className="ats-section">
-        <h2>{t.resume}</h2>
-        <p>{local(profile.summary)}</p>
-      </section>
-      <section className="ats-section">
-        <h2>{t.work}</h2>
-        {experiences.map((exp, index) => (
-          <div className="ats-job" key={exp.id}>
-            <h3>{local(exp.position)} - {exp.company}</h3>
-            <p className="ats-dates">{local(exp.period)} | {local(exp.location)}</p>
-            <p>{local(exp.summary)}</p>
-            <ul>{exp.highlights[lang].slice(0, index < 5 ? 3 : index === 6 ? 2 : 1).map((line, i) => <li key={i}>{line}</li>)}</ul>
-          </div>
-        ))}
-      </section>
-      <section className="ats-section">
-        <h2>{t.school}</h2>
-        {education.map((ed, i) => (
-          <p className="ats-education" key={i}><strong>{local(ed.degree)}</strong> - {ed.school} ({ed.period})</p>
-        ))}
-      </section>
-      <section className="ats-section">
-        <h2>{t.talent}</h2>
-        {skills.map((group, i) => (
-          <p className="ats-skill" key={i}><strong>{local(group.name)}:</strong> {group.items.join(', ')}</p>
-        ))}
-      </section>
+    <article className="ats-document" aria-hidden="true">
+      <h1>{profile.name}</h1>
+      <p>{profile.role[lang]} | {profile.location} | {profile.email} | {profile.linkedin}</p>
+      <h2>{t.resume}</h2>
+      <p>{profile.summary[lang].replace(/\n+/g, ' ')}</p>
+      <h2>{t.work}</h2>
+      {experiences.map(exp => (
+        <div className="ats-job" key={exp.id}>
+          <h3>{exp.position[lang]} - {exp.company}</h3>
+          <p className="ats-dates">{exp.period[lang]} | {exp.location[lang]}</p>
+          <p>{exp.summary[lang]}</p>
+          <ul>{exp.highlights[lang].slice(0, startYear(exp) >= 2022 ? 3 : 1).map((line, i) => <li key={i}>{line}</li>)}</ul>
+        </div>
+      ))}
+      <h2>{t.school}</h2>
+      {education.map((ed, i) => <p key={i}><strong>{ed.degree[lang]}</strong> - {ed.school} ({ed.period})</p>)}
+      {courses.length > 0 && <><h2>{t.coursesTitle}</h2><p>{courses.map(c => c.name + ([c.issuer, c.year].filter(Boolean).length ? ' (' + [c.issuer, c.year].filter(Boolean).join(', ') + ')' : '')).join('; ')}</p></>}
+      <h2>{t.talent}</h2>
+      {allSkills.map((group, i) => <p key={i}><strong>{group.name[lang]}:</strong> {group.items.join(', ')}</p>)}
+      <h2>{t.languages}</h2>
+      <p>{languages.map(item => item.name[lang] + ' (' + item.level[lang] + ')').join(', ')}</p>
     </article>
   )
 }
 
-function App() {
-  const [lang, setLang] = useState<Lang>(() => {
-    try { return localStorage.getItem('fc-cv-lang') === 'en' ? 'en' : 'pt' } catch { return 'pt' }
-  })
-  const [theme, setTheme] = useState<Theme>(() => {
-    try {
-      const item = localStorage.getItem('fc-cv-theme')
-      return item === 'light' || item === 'neon' ? item : 'midnight'
-    } catch { return 'midnight' }
-  })
+export default function App() {
+  const [lang, setLang] = useState<Lang>(() => (read('fc-cv-lang') === 'en' ? 'en' : 'pt'))
+  const [theme, setTheme] = useState<Theme>(() => (themes.find(item => item === read('fc-cv-theme')) ?? 'midnight'))
+  const [mode, setMode] = useState<Mode | null>(() => (read('fc-cv-mode') as Mode | null))
+  const [agentOpen, setAgentOpen] = useState(false)
+  const [question, setQuestion] = useState<{ text: string; nonce: number } | null>(null)
+  const [terminalOpen, setTerminalOpen] = useState(false)
+  const [toasts, setToasts] = useState<{ id: number; title: string; body: string; icon: string }[]>([])
   const [focus, setFocus] = useState('all')
   const [query, setQuery] = useState('')
-  const [expanded, setExpanded] = useState<string[]>(['unilog', 'suzano-imigrantes'])
-  const [skillTab, setSkillTab] = useState(0)
-  const [terminalOpen, setTerminalOpen] = useState(false)
-  const [command, setCommand] = useState('')
-  const [lines, setLines] = useState<string[]>([])
-  const [activeSection, setActiveSection] = useState<SectionName>('overview')
-  const inputRef = useRef<HTMLInputElement>(null)
+  const [expanded, setExpanded] = useState<string[]>([])
+  const [showEarlier, setShowEarlier] = useState(false)
+  const [activeSection, setActiveSection] = useState('inicio')
+  const [showFullSummary, setShowFullSummary] = useState(false)
   const t = copy[lang]
-  const local = (text: { pt: string; en: string }) => text[lang]
+  const typed = useTyped(headlines[lang])
+  const summaryParagraphs = profile.summary[lang].split(/\n{2,}/)
 
+  const toast = useCallback((title: string, body: string, icon = '✓') => {
+    const id = Date.now() + Math.random()
+    setToasts(previous => [...previous.slice(-2), { id, title, body, icon }])
+    window.setTimeout(() => setToasts(previous => previous.filter(item => item.id !== id)), 3400)
+  }, [])
+
+  const onUnlock = useCallback((id: AchievementId) => {
+    const item = achievementList.find(entry => entry.id === id)!
+    toast(copy[lang].unlocked + ' · +' + item.xp + ' XP', item[lang][0], item.icon)
+  }, [lang, toast])
+  const { unlocked, unlock, reset, xp } = useAchievements(onUnlock)
+  const gamified = mode !== 'recruiter'
+  const award = (id: AchievementId) => { if (gamified) unlock(id) }
+
+  useEffect(() => {
+    document.documentElement.lang = lang === 'pt' ? 'pt-BR' : 'en'
+    document.documentElement.dataset.theme = theme
+    write('fc-cv-theme', theme)
+    write('fc-cv-lang', lang)
+  }, [lang, theme])
+
+  useEffect(() => {
+    if (!('IntersectionObserver' in window)) return
+    const observer = new IntersectionObserver(entries => {
+      const visible = entries.filter(entry => entry.isIntersecting).sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0]
+      if (visible) setActiveSection(visible.target.id)
+    }, { rootMargin: '-90px 0px -50% 0px', threshold: [0, 0.2] })
+    document.querySelectorAll('[data-nav]').forEach(section => observer.observe(section))
+    return () => observer.disconnect()
+  }, [])
+
+  const chooseMode = (next: Mode) => {
+    setMode(next)
+    write('fc-cv-mode', next)
+    if (next === 'agent') window.setTimeout(() => openAgent(), 350)
+  }
+
+  const openAgent = (text?: string) => {
+    setAgentOpen(true)
+    award('agent')
+    if (text) setQuestion({ text, nonce: Date.now() })
+  }
+
+  const copyText = (value: string) => {
+    navigator.clipboard?.writeText(value).then(() => toast(t.copied, value), () => toast(t.copied, value))
+  }
+
+  const downloadJson = () => {
+    const data = { profile, experiences, education, skills: allSkills, research, courses, languages, generatedAt: new Date().toISOString() }
+    const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }))
+    const link = Object.assign(document.createElement('a'), { href: url, download: 'filipe-carneiro-resume.json' })
+    link.click()
+    URL.revokeObjectURL(url)
+    award('archivist')
+  }
+
+  const printResume = () => { award('archivist'); window.print() }
+
+  const goTo = (target: string) => {
+    if (target.startsWith('exp-')) {
+      const id = target.slice(4)
+      const exp = experiences.find(item => item.id === id)
+      setFocus('all'); setQuery('')
+      if (exp && startYear(exp) <= 2021) setShowEarlier(true)
+      setExpanded(previous => (previous.includes(id) ? previous : [...previous, id]))
+    }
+    window.setTimeout(() => document.getElementById(target)?.scrollIntoView({ behavior: reduceMotion() ? 'auto' : 'smooth', block: 'start' }), 60)
+  }
+
+  const onAction = (action: AgentAction) => {
+    if (action.type === 'scroll') goTo(action.target)
+    if (action.type === 'pdf') printResume()
+    if (action.type === 'json') downloadJson()
+    if (action.type === 'copy') copyText(action.value)
+    if (action.type === 'theme') { setTheme(action.theme); award('stylist') }
+  }
+
+  const toggle = (id: string) => {
+    setExpanded(previous => {
+      const next = previous.includes(id) ? previous.filter(item => item !== id) : [...previous, id]
+      if (next.length >= 3) award('deepdive')
+      return next
+    })
+  }
+
+  // ---------- trajetória: filtro + agrupamento por empresa ----------
   const filtered = useMemo(() => {
     const q = query.trim().toLocaleLowerCase()
     return experiences.filter(exp => {
       if (focus !== 'all' && exp.focus !== focus) return false
       if (!q) return true
-      return [exp.company, local(exp.position), local(exp.summary), local(exp.location),
-        ...exp.highlights[lang], ...exp.tags].join(' ').toLocaleLowerCase().includes(q)
+      return [exp.company, exp.position[lang], exp.summary[lang], exp.location[lang], ...exp.highlights[lang], ...exp.tags].join(' ').toLocaleLowerCase().includes(q)
     })
   }, [focus, query, lang])
 
-  useEffect(() => {
-    document.title = 'Filipe Carneiro da Silva'
-    document.documentElement.lang = lang === 'pt' ? 'pt-BR' : 'en'
-    document.documentElement.dataset.theme = theme
-    try {
-      localStorage.setItem('fc-cv-theme', theme)
-      localStorage.setItem('fc-cv-lang', lang)
-    } catch { /* Local preferences are optional. */ }
-  }, [lang, theme])
-
-  useEffect(() => {
-    if (!terminalOpen) return
-    inputRef.current?.focus()
-    const onKeydown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setTerminalOpen(false)
+  const grouped = useMemo(() => {
+    const groups: { company: string; items: Experience[] }[] = []
+    for (const exp of filtered) {
+      const last = groups[groups.length - 1]
+      if (last && last.company === exp.company) last.items.push(exp)
+      else groups.push({ company: exp.company, items: [exp] })
     }
-    window.addEventListener('keydown', onKeydown)
-    return () => window.removeEventListener('keydown', onKeydown)
-  }, [terminalOpen])
+    return groups
+  }, [filtered])
+  const searching = focus !== 'all' || query.trim() !== ''
+  const recent = searching ? grouped : grouped.filter(group => startYear(group.items[group.items.length - 1]) >= 2022)
+  const earlier = searching ? [] : grouped.filter(group => startYear(group.items[group.items.length - 1]) < 2022)
 
-  useEffect(() => {
-    if (!('IntersectionObserver' in window)) return
-    const sections = document.querySelectorAll<HTMLElement>('[data-navsection]')
-    const observer = new IntersectionObserver(entries => {
-      const visible = entries.filter(entry => entry.isIntersecting).sort((a, b) => b.intersectionRatio - a.intersectionRatio)
-      const current = visible[0]?.target.getAttribute('data-navsection')
-      if (current) setActiveSection(current as SectionName)
-    }, { rootMargin: '-100px 0px -48% 0px', threshold: [0, .15, .35] })
-    sections.forEach(section => observer.observe(section))
-    return () => observer.disconnect()
-  }, [])
+  const nav = [
+    { id: 'inicio', label: t.nav[0], short: t.navShort[0] },
+    { id: 'agente', label: t.nav[1], short: t.navShort[1] },
+    { id: 'experiencia', label: t.nav[2], short: t.navShort[2] },
+    { id: 'competencias', label: t.nav[3], short: t.navShort[3] },
+    { id: 'formacao', label: t.nav[4], short: t.navShort[4] },
+  ]
+  const filters = ['all', 'operations', 'data', 'leadership', 'research'].map((id, i) => ({ id, label: t.filters[i] }))
+  const stats = [
+    [String(new Date().getFullYear() - firstYear), t.stats[0][0], t.stats[0][1] + firstYear],
+    ['23', t.stats[1][0], t.stats[1][1]],
+    [String(experiences.filter(exp => exp.company === 'Suzano').length).padStart(2, '0'), t.stats[2][0], t.stats[2][1]],
+    [String(education.filter(ed => /p[óo]s/i.test(ed.degree.pt)).length).padStart(2, '0'), t.stats[3][0], t.stats[3][1]],
+  ]
+  const quickQuestions = lang === 'pt'
+    ? ['O que ele faz hoje?', 'Qual a experiência com IA?', 'Ele sabe SQL e Python?']
+    : ['What does he do now?', 'What is his AI background?', 'Does he know SQL and Python?']
 
-  const toggle = (id: string) => setExpanded(previous => previous.includes(id) ? previous.filter(item => item !== id) : [...previous, id])
-  const printResume = () => window.print()
-  const openTerminal = () => {
-    setLines([t.welcome])
-    setCommand('')
-    setTerminalOpen(true)
-  }
-  const submitTerminal = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    const cmd = command.trim().toLowerCase()
-    if (!cmd) return
-    setCommand('')
-    if (cmd === 'exit') { setTerminalOpen(false); return }
-    if (cmd === 'clear') { setLines([]); return }
-    if (cmd === 'pdf' || cmd === 'print') {
-      setLines(previous => [...previous, '$ ' + cmd, t.pdfHelp])
-      printResume()
-      return
-    }
-    const responses: Record<string, string> = {
-      help: t.commands,
-      about: local(profile.summary),
-      experience: experiences.map(exp => exp.company + ' — ' + local(exp.position)).join('\n'),
-      exp: experiences.map(exp => exp.company + ' — ' + local(exp.position)).join('\n'),
-      education: education.map(ed => local(ed.degree)).join('\n'),
-      edu: education.map(ed => local(ed.degree)).join('\n'),
-      skills: skills.map(group => group.items.join(' · ')).join('\n'),
-      research: local(research.description),
-      contact: profile.email + ' | ' + profile.linkedin,
-    }
-    setLines(previous => [...previous, '$ ' + cmd, responses[cmd] || t.unknown])
+  const renderRole = (exp: Experience, nested: boolean) => {
+    const open = expanded.includes(exp.id)
+    return (
+      <div className={nested ? 'role' : 'role role-single'} id={'exp-' + exp.id} key={exp.id}>
+        <div className="role-top">
+          <div>
+            <h3>{exp.position[lang]}</h3>
+            <p className="role-meta">{exp.period[lang]} · {exp.location[lang]}</p>
+          </div>
+          <span className={'focus-pill f-' + exp.focus}>{t.filters[['all', 'operations', 'data', 'leadership', 'research'].indexOf(exp.focus)]}</span>
+        </div>
+        <p className="role-summary">{exp.summary[lang]}</p>
+        <div className="tags">{exp.tags.map(tag => <span key={tag}>{tag}</span>)}</div>
+        <button className="expand" onClick={() => toggle(exp.id)} aria-expanded={open}>{open ? t.hide : t.details} <span>{open ? '−' : '+'}</span></button>
+        {open && <ul className="role-details">{exp.highlights[lang].map((line, i) => <li key={i}>{line}</li>)}</ul>}
+      </div>
+    )
   }
 
-  const navigation: { section: SectionName; label: string; target: string }[] = [
-    { section: 'overview', label: t.nav[0], target: 'inicio' },
-    { section: 'experience', label: t.nav[1], target: 'experiencia' },
-    { section: 'education', label: t.nav[2], target: 'formacao' },
-    { section: 'skills', label: t.nav[3], target: 'competencias' },
-    { section: 'research', label: t.nav[4], target: 'pesquisa' },
-  ]
-  const filters = [
-    { id: 'all', label: t.filters[0] },
-    { id: 'operations', label: t.filters[1] },
-    { id: 'data', label: t.filters[2] },
-    { id: 'leadership', label: t.filters[3] },
-    { id: 'research', label: t.filters[4] },
-  ]
+  const renderGroup = (group: { company: string; items: Experience[] }) => (
+    <article className="company" key={group.company + group.items[0].id}>
+      <div className="company-rail"><span className="company-dot" /></div>
+      <div className="company-card">
+        <header className="company-head">
+          <span className="company-mark">{group.company.split(/\s|—/)[0].slice(0, 2).toUpperCase()}</span>
+          <div>
+            <h3>{group.company}</h3>
+            <p>{group.items[group.items.length - 1].period[lang].split('—')[0].trim()} → {group.items[0].period[lang].split('—')[1]?.trim()}{group.items.length > 1 && ` · ${group.items.length} ${t.roles}`}</p>
+          </div>
+        </header>
+        <div className={group.items.length > 1 ? 'ladder' : ''}>{group.items.map(exp => renderRole(exp, group.items.length > 1))}</div>
+      </div>
+    </article>
+  )
 
   return (
     <>
       <ATSResume lang={lang} />
+      <a className="skip" href="#conteudo">{lang === 'pt' ? 'Pular para o conteúdo' : 'Skip to content'}</a>
       <div className="site">
         <header className="topbar">
-          <a href="#inicio" className="logo" aria-label="Filipe Carneiro da Silva">
-            <span className="logo-mark">fc<span>.</span></span>
-            <span className="logo-title">Filipe Carneiro<small>{t.top}</small></span>
+          <a href="#inicio" className="logo" aria-label={profile.name}>
+            <span className="logo-mark">fc<i /></span>
+            <span className="logo-text">Filipe Carneiro<small>{gamified ? `XP ${xp}/${maxXp}` : 'CURRICULUM / 2026'}</small></span>
           </a>
-          <nav className="nav-desktop" aria-label="Navigation">
-            {navigation.map(item => <a key={item.section} href={'#' + item.target} className={activeSection === item.section ? 'current' : ''}>{item.label}</a>)}
+          <nav className="nav-desktop" aria-label="Navegação">
+            {nav.map(item => <a key={item.id} href={'#' + item.id} className={activeSection === item.id ? 'current' : ''}>{item.label}</a>)}
           </nav>
-          <div className="top-controls">
-            <button className="language" onClick={() => setLang(lang === 'pt' ? 'en' : 'pt')} aria-label={t.lang}>{lang.toUpperCase()} <span>⇄</span> {lang === 'pt' ? 'EN' : 'PT'}</button>
-            <button className="top-print" onClick={printResume}>{icons.down} <span>PDF ATS</span></button>
+          <div className="top-actions">
+            <button className="icon-btn" title={t.theme + ': ' + t.themeNames[theme]} aria-label={t.theme + ': ' + t.themeNames[theme]} onClick={() => { setTheme(themes[(themes.indexOf(theme) + 1) % 3]); award('stylist') }}>{theme === 'light' ? '☀' : theme === 'neon' ? '✺' : '☾'}</button>
+            <button className="icon-btn hide-sm" title={t.terminal} aria-label={t.terminal} onClick={() => setTerminalOpen(true)}>&gt;_</button>
+            <button className="lang-btn" onClick={() => { setLang(lang === 'pt' ? 'en' : 'pt'); award('polyglot') }} aria-label={t.lang}>{lang === 'pt' ? 'PT' : 'EN'}<span>⇄</span>{lang === 'pt' ? 'EN' : 'PT'}</button>
+            <button className="btn btn-primary btn-sm" onClick={printResume}>↓ <span className="hide-sm">{t.cv}</span></button>
           </div>
         </header>
-        <main>
-          <section className="hero" id="inicio" data-navsection="overview">
-            <div className="ambient ambient-a" aria-hidden="true"/>
-            <div className="ambient ambient-b" aria-hidden="true"/>
+
+        <main id="conteudo">
+          {/* ---------- HERO ---------- */}
+          <section className="hero" id="inicio" data-nav>
+            <div className="hero-grid" aria-hidden="true" />
             <div className="hero-inner">
-              <div className="hero-content">
-                <div className="signal"><i/> {t.eyebrow}<span className="signal-line"/></div>
-                <p className="hero-code">curriculum://filipe-carneiro / profile</p>
-                <h1>Filipe<br/><span>Carneiro da Silva</span></h1>
-                <p className="hero-statement">{t.subline}</p>
-                <p className="hero-intro">{t.intro}</p>
+              <div className="hero-copy">
+                <p className="status"><b className="live-dot" /> {t.agentOnline} · Serra, ES</p>
+                <h1>Filipe<br /><span>Carneiro da Silva</span></h1>
+                <p className="typed" aria-label={headlines[lang].join(' · ')}><span aria-hidden="true">{typed}</span><i aria-hidden="true">▍</i></p>
+                <p className="statement">{t.statement}</p>
+                <p className="intro">{t.intro}</p>
                 <div className="hero-cta">
-                  <a className="action-primary" href="#experiencia">{t.explore} <b>↗</b></a>
-                  <button className="action-secondary" onClick={printResume}>↓ {t.cv}</button>
+                  <button className="btn btn-primary btn-lg" onClick={() => openAgent()}>✦ {t.askAgent}</button>
+                  <a className="btn btn-ghost btn-lg" href="#experiencia">{t.explore} ↓</a>
                 </div>
-                <div className="hero-foot"><span>⌖ {profile.location}</span><span>✉ <a href={'mailto:' + profile.email}>{profile.email}</a></span></div>
+                <div className="quick-asks">
+                  {quickQuestions.map(item => <button key={item} onClick={() => openAgent(item)}><span>›</span> {item}</button>)}
+                </div>
               </div>
               <div className="hero-visual">
-                <div className="orbit orbit-a"/><div className="orbit orbit-b"/>
-                <div className="portrait-frame">
-                  <div className="portrait-top"><span>PROFILE // 001</span><span>●</span></div>
-                  <div className="portrait-placeholder" aria-label={t.photoPending}>
-                    <img className="portrait-photo" src="/portrait.svg" alt="Filipe Carneiro da Silva" loading="eager" />
-                    <span className="portrait-noise">01 — FCS</span>
+                <div className="photo-card">
+                  <div className="photo-scan" aria-hidden="true" />
+                  <img src="/portrait.webp" alt={profile.name} width="600" height="840" />
+                  <div className="photo-tags" aria-hidden="true">
+                    <span className="tag-a">operations</span>
+                    <span className="tag-b">data · BI</span>
+                    <span className="tag-c">applied AI</span>
                   </div>
-                  <div className="portrait-bottom"><span>FILIPE CARNEIRO</span><span>BR • ES</span></div>
                 </div>
-                <div className="floating-label label-one">DATA <span>↗</span></div>
-                <div className="floating-label label-two">OPERATIONS <span>↗</span></div>
+                <div className="photo-caption"><code>agent.status = "online"</code><span>{profile.role[lang]}</span></div>
               </div>
             </div>
-            <div className="hero-rail">
-              <span>{lang === 'pt' ? 'OPERAÇÕES / DADOS / TECNOLOGIA' : 'OPERATIONS / DATA / TECHNOLOGY'}</span><span>SCROLL TO EXPLORE ↓</span>
+            <div className="stats">
+              {stats.map(([value, label, sub]) => <div key={label}><b>{value}</b><span>{label}</span><small>{sub}</small></div>)}
             </div>
           </section>
 
-          <div className="theme-panel" aria-label={t.theme}>
-            <div className="theme-caption"><span className="terminal-glyph">⌘</span> {t.theme}</div>
-            <div className="theme-controls">
-              {(['midnight', 'light', 'neon'] as Theme[]).map(item => <button key={item} className={theme === item ? 'theme-choice selected' : 'theme-choice'} onClick={() => setTheme(item)} aria-pressed={theme === item}><i className={'theme-dot theme-' + item}/>{t.themeNames[item]}</button>)}
-            </div>
-            <button className="theme-terminal" onClick={openTerminal}><span>&gt;_</span> {t.terminal}</button>
-          </div>
-
-          <section className="section summary-section" id="perfil">
-            <div className="section-title"><span className="section-number">01 / 05</span><h2>{t.summary}</h2><span className="title-line"/></div>
-            <div className="summary-grid">
-              <div className="summary-body"><p>{local(profile.summary)}</p><a href={profile.linkedin} rel="noreferrer" target="_blank" className="text-link">LinkedIn ↗</a></div>
-              <div className="milestones">
-                <h3>{t.milestones}</h3>
-                {[['23', t.milestoneLabels[0]], ['04', t.milestoneLabels[1]], ['02', t.milestoneLabels[2]]].map(([number, label]) => <div className="milestone" key={number}><b>{number}</b><span>{label}</span></div>)}
-                <small>{lang === 'pt' ? 'Dados de escopo e trajetória, não índices de desempenho.' : 'Scope and career facts, not performance scores.'}</small>
+          {/* ---------- PERFIL + CONTATO ---------- */}
+          <section className="section" id="perfil">
+            <div className="profile-grid">
+              <div className="card">
+                <span className="kicker">01 · {t.profileTitle}</span>
+                <div className="lead">{summaryParagraphs.slice(0, showFullSummary ? undefined : 2).map((paragraph, i) => <p key={i}>{paragraph}</p>)}</div>
+                {summaryParagraphs.length > 2 && <button className="lead-more" onClick={() => setShowFullSummary(!showFullSummary)} aria-expanded={showFullSummary}>{showFullSummary ? (lang === 'pt' ? 'Mostrar menos −' : 'Show less −') : (lang === 'pt' ? 'Ler resumo completo +' : 'Read full summary +')}</button>}
+              </div>
+              <div className="card contact-card">
+                <span className="kicker">{t.contactCard}</span>
+                <button className="contact-row" onClick={() => copyText(profile.email)}><span>E-mail</span><strong>{profile.email}</strong><em>{t.copyEmail}</em></button>
+                <a className="contact-row" href={profile.linkedin} target="_blank" rel="noreferrer"><span>LinkedIn</span><strong>/in/filipecarneirodasilva</strong><em>↗</em></a>
+                <a className="contact-row" href={profile.github} target="_blank" rel="noreferrer"><span>GitHub</span><strong>@srcarneiro1</strong><em>↗</em></a>
+                <div className="contact-row static"><span>{t.location}</span><strong>{profile.location}</strong></div>
+                <div className="contact-row static"><span>{t.languages}</span><strong>{languages.map(item => item.name[lang] + ' (' + item.level[lang] + ')').join(' · ')}</strong></div>
+                <div className="mini-actions"><button onClick={printResume}>↓ PDF ATS</button><button onClick={downloadJson}>{'{ }'} {t.json}</button></div>
               </div>
             </div>
           </section>
 
-          <section className="section experience-section" id="experiencia" data-navsection="experience">
-            <div className="section-title"><span className="section-number">02 / 05</span><h2>{t.career}</h2><span className="title-line"/></div>
-            <p className="section-subtitle">{t.careerDesc}</p>
-            <div className="experience-tools">
-              <label className="search-box"><span className="search-icon">⌕</span><span className="sr-only">{t.searchLabel}</span><input type="search" placeholder={t.query} value={query} onChange={event => setQuery(event.target.value)}/>{query && <button onClick={() => setQuery('')} aria-label={t.clear}>×</button>}</label>
-              <div className="filter-tabs" aria-label="Experience filters">{filters.map(item => <button key={item.id} onClick={() => setFocus(item.id)} aria-pressed={focus === item.id} className={focus === item.id ? 'is-selected' : ''}>{item.label}</button>)}</div>
+          {/* ---------- AGENTE / IA APLICADA ---------- */}
+          <section className="section agent-section" id="agente" data-nav>
+            <div className="section-head">
+              <span className="kicker">02 · {t.agentKicker}</span>
+              <h2>{t.agentTitle}</h2>
+              <p>{t.agentLead}</p>
             </div>
-            <div className="experience-count"><span>RESULTS / {String(filtered.length).padStart(2, '0')}</span><span>{lang === 'pt' ? 'HISTÓRICO PROFISSIONAL' : 'PROFESSIONAL HISTORY'}</span></div>
+            <ol className="pipeline">
+              {t.pipeline.map(([title, desc], i) => <li key={title}><span>{String(i + 1).padStart(2, '0')}</span><strong>{title}</strong><small>{desc}</small></li>)}
+            </ol>
+            <div className="agent-cta card">
+              <div className="agent-orb" aria-hidden="true"><i /><i /><i /></div>
+              <div>
+                <h3>Filipe.ai</h3>
+                <p>{lang === 'pt' ? 'Pergunte sobre experiências, ferramentas, formação — ou peça para ele navegar, exportar o PDF ou trocar o tema.' : 'Ask about experience, tools, education — or ask it to navigate, export the PDF or switch themes.'}</p>
+              </div>
+              <button className="btn btn-primary" onClick={() => openAgent()}>{lang === 'pt' ? 'Abrir agente' : 'Open agent'} →</button>
+            </div>
+            <JobCopilot lang={lang} onUse={() => award('recruiter')} onGo={goTo} />
+          </section>
+
+          {/* ---------- TRAJETÓRIA ---------- */}
+          <section className="section" id="experiencia" data-nav>
+            <div className="section-head">
+              <span className="kicker">03 · {t.careerTitle}</span>
+              <h2>{t.careerTitle}</h2>
+              <p>{t.careerLead}</p>
+            </div>
+            <div className="toolbar">
+              <label className="search">
+                <span aria-hidden="true">⌕</span>
+                <input type="search" placeholder={t.query} value={query} onChange={event => setQuery(event.target.value)} aria-label={t.query} />
+              </label>
+              <div className="filters" role="group">
+                {filters.map(item => <button key={item.id} aria-pressed={focus === item.id} onClick={() => setFocus(item.id)}>{item.label}</button>)}
+              </div>
+            </div>
+            <p className="count">{String(filtered.length).padStart(2, '0')} {t.results}</p>
             <div className="timeline">
-              {filtered.map((exp, index) => <article className="career-entry" key={exp.id}>
-                <div className="career-index"><span>{String(index + 1).padStart(2, '0')}</span><i/></div>
-                <div className="career-content">
-                  <div className="career-top"><div><span className="career-company">{exp.company}</span><h3>{local(exp.position)}</h3></div><span className="career-period">{local(exp.period)}</span></div>
-                  <p className="career-location">⌖ {local(exp.location)}</p>
-                  <p className="career-summary">{local(exp.summary)}</p>
-                  <div className="career-tags">{exp.tags.map(tag => <span key={tag}>{tag}</span>)}</div>
-                  <button className="career-expand" onClick={() => toggle(exp.id)} aria-expanded={expanded.includes(exp.id)}>{expanded.includes(exp.id) ? t.hide : t.details}<span>{expanded.includes(exp.id) ? '−' : '+'}</span></button>
-                  {expanded.includes(exp.id) && <div className="career-detail"><h4>{t.detailTitle}</h4><ul>{exp.highlights[lang].map((text, i) => <li key={i}>{text}</li>)}</ul></div>}
+              {recent.map(renderGroup)}
+              {filtered.length === 0 && <p className="muted">{t.notFound}</p>}
+              {earlier.length > 0 && (
+                <div className="earlier">
+                  <button className="earlier-toggle" onClick={() => setShowEarlier(!showEarlier)} aria-expanded={showEarlier}>
+                    {t.earlier} · {earlier.reduce((sum, group) => sum + group.items.length, 0)} <span>{showEarlier ? '−' : '+'}</span>
+                  </button>
+                  {showEarlier && earlier.map(renderGroup)}
                 </div>
-              </article>)}
-              {filtered.length === 0 && <p className="no-results">{t.notFound}</p>}
+              )}
             </div>
           </section>
 
-          <section className="section education-section" id="formacao" data-navsection="education">
-            <div className="section-title"><span className="section-number">03 / 05</span><h2>{t.academic}</h2><span className="title-line"/></div>
-            <div className="education-grid">{education.map((ed, index) => <article className="education-tile" key={index}><span className="education-serial">0{index + 1} <span>↗</span></span><div><p className="education-school">{ed.school}</p><h3>{local(ed.degree)}</h3><span className="education-date">{ed.period}</span>{ed.note && <p>{local(ed.note)}</p>}</div></article>)}</div>
+          {/* ---------- GRAFO ---------- */}
+          <section className="section" id="competencias" data-nav>
+            <div className="section-head">
+              <span className="kicker">04 · {t.graphTitle}</span>
+              <h2>{t.graphTitle}</h2>
+              <p>{t.graphLead}</p>
+            </div>
+            <SkillGraph lang={lang} onGo={goTo} onExplore={count => { if (count >= 5) award('graph') }} />
+            <div className="skill-groups">
+              {allSkills.map((group, i) => (
+                <div className="card" key={i}>
+                  <span className={'kicker k' + i}>0{i + 1}</span>
+                  <h3>{group.name[lang]}</h3>
+                  <div className="tags">{group.items.map(item => <span key={item}>{item}</span>)}</div>
+                </div>
+              ))}
+            </div>
           </section>
 
-          <section className="section skills-section" id="competencias" data-navsection="skills">
-            <div className="section-title"><span className="section-number">04 / 05</span><h2>{t.expertise}</h2><span className="title-line"/></div>
-            <p className="section-subtitle">{t.expertiseDesc}</p>
-            <div className="skill-explorer">
-              <div className="skill-selector" role="tablist" aria-label={t.expertise}>
-                {skills.map((group, index) => <button key={index} id={'skill-tab-' + index} role="tab" aria-controls="skill-panel" aria-selected={skillTab === index} className={skillTab === index ? 'active' : ''} onClick={() => setSkillTab(index)}><span>0{index + 1}</span><strong>{local(group.name)}</strong><span>↗</span></button>)}
+          {/* ---------- FORMAÇÃO ---------- */}
+          <section className="section" id="formacao" data-nav>
+            <div className="section-head"><span className="kicker">05 · {t.eduTitle}</span><h2>{t.eduTitle}</h2></div>
+            <div className="edu-grid">
+              {education.map((ed, i) => (
+                <article className={'card edu' + (/Intelig/.test(ed.degree.pt) ? ' edu-ai' : '')} key={i}>
+                  <span className="edu-year">{ed.period}</span>
+                  <h3>{ed.degree[lang]}</h3>
+                  <p className="muted">{ed.school}</p>
+                  {ed.note && <p>{ed.note[lang]}</p>}
+                </article>
+              ))}
+            </div>
+            {courses.length > 0 && (
+              <div id="cursos">
+                <h3 className="sub-title">{t.coursesTitle}</h3>
+                <div className="course-list">
+                  {courses.map((course, i) => { const meta = [course.issuer, course.year].filter(Boolean).join(' · '); const body = <><strong>{course.name}</strong>{meta && <span>{meta}</span>}</>; return course.url ? <a key={i} className="card course" href={course.url} target="_blank" rel="noreferrer">{body}</a> : <div key={i} className="card course">{body}</div> })}
+                </div>
               </div>
-              <div className="skill-detail" role="tabpanel" id="skill-panel" aria-labelledby={'skill-tab-' + skillTab}>
-                <span className="section-number">CAPABILITIES / 0{skillTab + 1}</span>
-                <h3>{local(skills[skillTab].name)}</h3>
-                <div className="skill-pills">{skills[skillTab].items.map((skill, index) => <span key={skill} style={{ animationDelay: String(index * 40) + 'ms' }}>{skill}</span>)}</div>
-                <div className="skill-evidence"><strong>{t.evidence}</strong><p>{t.examples[skillTab]}</p></div>
-              </div>
+            )}
+            <div className="card research" id="pesquisa">
+              <span className="kicker">UFES · CNPq · 2023—2024 · {t.researchTitle}</span>
+              <h3>{research.name}</h3>
+              <p>{research.description[lang]}</p>
+              <a className="btn btn-ghost" href={profile.research} target="_blank" rel="noreferrer">{t.researchBtn} ↗</a>
             </div>
           </section>
 
-          <section className="section research-section" id="pesquisa" data-navsection="research">
-            <div className="section-title"><span className="section-number">05 / 05</span><h2>{t.research}</h2><span className="title-line"/></div>
-            <div className="research-panel">
-              <div className="research-pattern" aria-hidden="true"><i/><i/><i/><i/><i/><i/></div>
-              <div className="research-data"><span>UFES / CNPq / 2023—2024</span><h3>{research.name}</h3><p>{local(research.description)}</p><a href={profile.research} target="_blank" rel="noreferrer">{t.researchBtn} ↗</a></div>
+          {/* ---------- CONQUISTAS ---------- */}
+          {gamified && (
+            <section className="section" id="conquistas">
+              <div className="section-head row">
+                <div><span className="kicker">06 · {t.achTitle}</span><h2>{t.achTitle}</h2><p>{t.achLead}</p></div>
+                <button className="btn btn-ghost btn-sm" onClick={reset}>{t.reset}</button>
+              </div>
+              <div className="xp"><div className="xp-bar"><i style={{ width: (xp / maxXp) * 100 + '%' }} /></div><span>{xp}/{maxXp} XP · {unlocked.length}/{achievementList.length}</span></div>
+              <div className="ach-grid">
+                {achievementList.map(item => {
+                  const done = unlocked.includes(item.id)
+                  return (
+                    <div key={item.id} className={'ach' + (done ? ' done' : '')}>
+                      <span className="ach-icon">{done ? item.icon : '🔒'}</span>
+                      <div><strong>{item[lang][0]}</strong><small>{item[lang][1]}</small></div>
+                      <em>+{item.xp}</em>
+                    </div>
+                  )
+                })}
+              </div>
+            </section>
+          )}
+
+          {/* ---------- CONTATO ---------- */}
+          <section className="contact" id="contato">
+            <span className="kicker">{lang === 'pt' ? 'CONTATO' : 'CONTACT'}</span>
+            <h2>{t.contactTitle}</h2>
+            <p>{t.contactLead}</p>
+            <div className="contact-actions">
+              <button className="btn btn-primary" onClick={() => copyText(profile.email)}>✉ {profile.email}</button>
+              <a className="btn btn-ghost" href={profile.linkedin} target="_blank" rel="noreferrer">LinkedIn ↗</a>
+              <a className="btn btn-ghost" href={profile.github} target="_blank" rel="noreferrer">GitHub ↗</a>
             </div>
-          </section>
-          <section className="contact-section" id="contato">
-            <span className="section-number">CONTACT / CONEXÕES</span>
-            <h2>{t.reach}</h2>
-            <div className="contact-actions"><a href={'mailto:' + profile.email}>✉ {profile.email} ↗</a><a href={profile.linkedin} target="_blank" rel="noreferrer">LinkedIn ↗</a><a href={profile.github} target="_blank" rel="noreferrer">GitHub ↗</a></div>
-            <p>{t.privacy}</p>
+            <small>{t.privacy}</small>
           </section>
         </main>
-        <footer className="footer"><span>© {new Date().getFullYear()} Filipe Carneiro da Silva</span><span>{t.footer}</span><a href="#inicio">↑ TOP</a></footer>
-        <div className="mobile-nav">{navigation.map((item, index) => <a key={item.section} href={'#' + item.target} aria-label={item.label} className={activeSection === item.section ? 'active' : ''}><span>{String(index + 1).padStart(2, '0')}</span>{item.label}</a>)}</div>
+
+        <footer className="footer">
+          <span>© {new Date().getFullYear()} {profile.name}</span>
+          <span>{t.footer}{dataSource.importedAt && ` · ${lang === 'pt' ? 'dados do LinkedIn de' : 'LinkedIn data from'} ${new Date(dataSource.importedAt).toLocaleDateString(lang === 'pt' ? 'pt-BR' : 'en-US')}`}</span>
+          <span className="footer-actions">
+            <button onClick={() => setTerminalOpen(true)}>&gt;_ {t.terminal}</button>
+            <button onClick={() => { setMode(null) }}>{t.changeMode}</button>
+          </span>
+        </footer>
+
+        <nav className="mobile-nav" aria-label="Navegação">
+          {nav.map(item => <a key={item.id} href={'#' + item.id} className={activeSection === item.id ? 'current' : ''}>{item.short}</a>)}
+        </nav>
       </div>
 
-      {terminalOpen && <div className="terminal-backdrop" onMouseDown={event => { if (event.target === event.currentTarget) setTerminalOpen(false) }}>
-        <section className="terminal-window" role="dialog" aria-modal="true" aria-label={t.terminal}>
-          <div className="terminal-heading"><span><i/> filipe@curriculum:~</span><button onClick={() => setTerminalOpen(false)} aria-label={t.close}>×</button></div>
-          <div className="terminal-lines" role="log" aria-live="polite">{lines.map((line, index) => <p key={index} className={line.startsWith('$') ? 'terminal-inputline' : ''}>{line}</p>)}</div>
-          <form onSubmit={submitTerminal} className="terminal-form"><span>$</span><input ref={inputRef} value={command} onChange={event => setCommand(event.target.value)} placeholder={t.terminalPrompt} spellCheck={false} autoComplete="off"/><button type="submit" aria-label="Run command">↵</button></form>
-          <p className="terminal-tip">{t.terminalTip}</p>
-        </section>
-      </div>}
+      {!agentOpen && (
+        <button className="agent-fab" onClick={() => openAgent()} aria-label={t.askAgent}>
+          <span className="agent-avatar" aria-hidden="true"><i /></span><span className="fab-label">{t.askAgent}</span>
+        </button>
+      )}
+      <AgentDock
+        lang={lang}
+        open={agentOpen}
+        onClose={() => setAgentOpen(false)}
+        onAction={onAction}
+        onAsked={count => { if (count >= 3) award('curious') }}
+        onMatch={() => award('recruiter')}
+        question={question}
+      />
+      {terminalOpen && <Terminal lang={lang} onClose={() => setTerminalOpen(false)} onAction={onAction} onOpenAgent={() => openAgent()} onUse={() => award('terminal')} />}
+
+      {mode === null && (
+        <div className="overlay">
+          <section className="onboarding" role="dialog" aria-modal="true" aria-labelledby="onb-title">
+            <span className="agent-avatar big" aria-hidden="true"><i /></span>
+            <h2 id="onb-title">{t.onboardingTitle}</h2>
+            <p>{t.onboardingText}</p>
+            <div className="onb-options">
+              <button onClick={() => chooseMode('recruiter')}><strong>{t.onboardingRead}</strong><small>{t.onboardingReadHint}</small></button>
+              <button className="primary" onClick={() => chooseMode('agent')}><strong>✦ {t.onboardingPlay}</strong><small>{t.onboardingPlayHint}</small></button>
+            </div>
+            <button className="lang-btn" onClick={() => setLang(lang === 'pt' ? 'en' : 'pt')}>{lang === 'pt' ? 'English version' : 'Versão em português'}</button>
+          </section>
+        </div>
+      )}
+
+      <div className="toasts" aria-live="polite">
+        {toasts.map(item => <div className="toast" key={item.id}><span>{item.icon}</span><div><strong>{item.title}</strong><small>{item.body}</small></div></div>)}
+      </div>
     </>
   )
 }
-export default App
