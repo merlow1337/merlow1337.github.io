@@ -293,7 +293,7 @@ function App() {
             <div className="hero-inner">
               <div className="hero-content">
                 <div className="signal"><i/> {t.eyebrow}<span className="signal-line"/></div>
-                <p className="hero-code">portfolio://filipe-carneiro / curriculum</p>
+                <p className="hero-code">curriculum://filipe-carneiro / profile</p>
                 <h1>Filipe<br/><span>Carneiro da Silva</span></h1>
                 <p className="hero-statement">{t.subline}</p>
                 <p className="hero-intro">{t.intro}</p>
@@ -308,7 +308,7 @@ function App() {
                 <div className="portrait-frame">
                   <div className="portrait-top"><span>PROFILE // 001</span><span>●</span></div>
                   <div className="portrait-placeholder" aria-label={t.photoPending}>
-                    <span className="portrait-monogram">FC</span>
+                    <img className="portrait-photo" src="/portrait.svg" alt="Filipe Carneiro da Silva" loading="eager" />
                     <span className="portrait-noise">01 — FCS</span>
                   </div>
                   <div className="portrait-bottom"><span>FILIPE CARNEIRO</span><span>BR • ES</span></div>
