@@ -318,7 +318,7 @@ function App() {
               </div>
             </div>
             <div className="hero-rail">
-              <span>{t.label}</span><span>SCROLL TO EXPLORE ↓</span>
+              <span>{lang === 'pt' ? 'OPERAÇÕES / DADOS / TECNOLOGIA' : 'OPERATIONS / DATA / TECHNOLOGY'}</span><span>SCROLL TO EXPLORE ↓</span>
             </div>
           </section>
 
@@ -349,7 +349,7 @@ function App() {
               <label className="search-box"><span className="search-icon">⌕</span><span className="sr-only">{t.searchLabel}</span><input type="search" placeholder={t.query} value={query} onChange={event => setQuery(event.target.value)}/>{query && <button onClick={() => setQuery('')} aria-label={t.clear}>×</button>}</label>
               <div className="filter-tabs" aria-label="Experience filters">{filters.map(item => <button key={item.id} onClick={() => setFocus(item.id)} aria-pressed={focus === item.id} className={focus === item.id ? 'is-selected' : ''}>{item.label}</button>)}</div>
             </div>
-            <div className="experience-count"><span>RESULTS / {String(filtered.length).padStart(2, '0')}</span><span>{t.official || ''}</span></div>
+            <div className="experience-count"><span>RESULTS / {String(filtered.length).padStart(2, '0')}</span><span>{lang === 'pt' ? 'HISTÓRICO PROFISSIONAL' : 'PROFESSIONAL HISTORY'}</span></div>
             <div className="timeline">
               {filtered.map((exp, index) => <article className="career-entry" key={exp.id}>
                 <div className="career-index"><span>{String(index + 1).padStart(2, '0')}</span><i/></div>
