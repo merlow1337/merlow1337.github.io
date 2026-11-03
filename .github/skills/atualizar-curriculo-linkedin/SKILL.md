@@ -25,7 +25,7 @@ Extraia o texto do PDF e produza um JSON **exatamente** neste formato, mantendo 
   "name": "Nome completo",
   "headline": "Título do perfil (as linhas abaixo do nome, juntas)",
   "location": "Cidade, Estado, País",
-  "summary": "Texto da seção Resumo. Separe parágrafos com \\n\\n.",
+  "summary": "Texto da seção Resumo. Separe parágrafos com \n\n.",
   "topSkills": ["itens de Principais competências"],
   "languages": [{ "name": "English", "level": "Full Professional" }],
   "certifications": ["itens de Certifications, uma entrada por certificação"],
