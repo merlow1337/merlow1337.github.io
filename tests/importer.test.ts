@@ -1,13 +1,19 @@
 // Importador do LinkedIn testado com PDFs sintéticos (dados fictícios), incluindo mudanças de layout.
 import { describe, expect, it } from 'vitest'
-import { readFileSync } from 'node:fs'
 // @ts-expect-error módulo JS sem tipos
 import { parseLinkedInPdf, validate, applyRedactions } from '../scripts/linkedin-parser.mjs'
 import { fakeLinkedInPdf, baseProfile, FAKE_PHONE, FAKE_EMAIL, type FakeProfile } from './helpers/fakeLinkedInPdf'
 
 type Parsed = { data: any; pages: number }
 const run = async (profile: FakeProfile, opts?: { pageHeight?: number }): Promise<Parsed> => parseLinkedInPdf(await fakeLinkedInPdf(profile, opts))
-const rules = JSON.parse(readFileSync('src/data/redactions.json', 'utf8'))
+// regras próprias do teste (o arquivo real pode estar vazio por decisão do dono do currículo)
+const rules = {
+  pt: [
+    { pattern: '\\b\\d[\\d.,]*\\s+(depositantes|clientes)(\\s+ativos)?', replace: 'múltiplos $1$2', flags: 'gi' },
+    { pattern: '(aproximadamente|cerca de|mais de)?\\s*\\b\\d[\\d.,]*\\s+SKUs', replace: 'milhares de SKUs', flags: 'gi' },
+  ],
+  en: [],
+}
 
 describe('importador — layout padrão (PT)', () => {
   it('extrai cabeçalho, resumo, barra lateral e formação', async () => {
