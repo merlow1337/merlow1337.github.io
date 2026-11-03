@@ -6,9 +6,11 @@ dist/
 .DS_Store
 *.log
 
-# PDF do LinkedIn contém telefone/e-mail: nunca versionar pelo terminal.
-# (Para usar o fluxo automático, envie o PDF pelo GitHub web: o workflow importa e apaga o arquivo.)
+# PDF do LinkedIn contém telefone/e-mail: nunca versionar (nem pelo terminal, nem pelo site do GitHub).
 linkedin/*.pdf
 linkedin/*.PDF
 *.pem
 *.key
+
+# saídas dos testes de navegador (PDFs e prints gerados)
+e2e-artifacts/
