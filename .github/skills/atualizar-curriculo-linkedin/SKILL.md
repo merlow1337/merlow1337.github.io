@@ -73,13 +73,25 @@ O site traduz por memória: `src/data/translations.json` tem `{ "entries": { "<t
 1. Um resumo curto do que mudou.
 2. O arquivo completo `src/data/linkedin.json`.
 3. O arquivo completo `src/data/translations.json`.
-4. Um lembrete: subir os 2 arquivos no GitHub (Add file → Upload files, na pasta `src/data/`), **sem enviar o PDF**. O GitHub roda os testes: se algo estiver inconsistente ou com dado pessoal, o deploy é bloqueado e o site continua na versão anterior. Confira a aba **Actions**; avisos de "Tradução pendente" indicam textos que faltou traduzir.
+4. Se você gravou no repositório: o link do pull request. Senão, um lembrete: subir os 2 arquivos no GitHub (Add file → Upload files, na pasta `src/data/`), **sem enviar o PDF**. O GitHub roda os testes: se algo estiver inconsistente ou com dado pessoal, o deploy é bloqueado e o site continua na versão anterior. Confira a aba **Actions**; avisos de "Tradução pendente" indicam textos que faltou traduzir.
 
 ## Arquivos de entrada esperados
 
-- PDF do LinkedIn (perfil → Recursos → Salvar como PDF)
+- PDF do LinkedIn (perfil → Recursos → Salvar como PDF), sempre anexado pelo usuário na conversa
 - `src/data/linkedin.json` atual
 - `src/data/translations.json` atual
 
-Se faltar algum arquivo, peça antes de começar. Sem o `linkedin.json` anterior, trate todas as experiências como novas.
+### Onde buscar os dois JSON
+
+1. **Se você tiver acesso ao repositório `srcarneiro1/srcarneiro1.github.io`:** leia `src/data/linkedin.json` e `src/data/translations.json` direto da branch `main`. Antes de começar, informe o valor de `source.importedAt` que você leu, para o usuário confirmar que é a versão atual.
+2. **Se não tiver acesso:** peça os dois arquivos antes de começar.
+
+Sem o `linkedin.json` anterior, trate todas as experiências como novas.
+
+### Se você puder gravar no repositório
+
+- Entregue por **pull request** numa branch nova (ex.: `chore/linkedin-AAAA-MM-DD`), **nunca direto na `main`**. Assim os testes de privacidade e consistência rodam antes do merge.
+- O pull request altera **somente** `src/data/linkedin.json` e `src/data/translations.json`.
+- Não faça o merge: o usuário aprova depois de ver os testes verdes.
+- **Nunca adicione o PDF ao repositório**, em nenhuma pasta, branch ou commit.
 Nunca peça nem aceite que o PDF seja enviado ao GitHub.
