@@ -57,6 +57,8 @@ Regras de extração:
 - Linhas quebradas pertencem ao mesmo bullet até o próximo hífen ou até uma frase que termina com ponto. Uma linha sem hífen depois de um ponto final é um bullet novo.
 - O PDF às vezes cola frases ("processos.Minha"). Coloque espaço depois do ponto.
 - Ignore rodapés como "Page 2 of 7".
+- **Regras de generalização:** aplique as regras de `src/data/redactions.json` (regex `pattern` → `replace`) em todos os textos antes de gravar. **Se as listas `pt` e `en` estiverem vazias (situação atual), mantenha os textos exatamente como estão no LinkedIn, inclusive números.** Quando houver regras, as chaves do `translations.json` usam o texto já generalizado e o CI falha se algum texto ainda casar com elas.
+- Não generalize nada por conta própria nem pergunte a cada atualização: o usuário decidiu publicar os números como estão no LinkedIn.
 
 ### Tarefa 2: completar `translations.json` (versão em inglês)
 
@@ -80,18 +82,19 @@ O site traduz por memória: `src/data/translations.json` tem `{ "entries": { "<t
 - PDF do LinkedIn (perfil → Recursos → Salvar como PDF), sempre anexado pelo usuário na conversa
 - `src/data/linkedin.json` atual
 - `src/data/translations.json` atual
+- `src/data/redactions.json` (regras de generalização)
 
 ### Onde buscar os dois JSON
 
-1. **Se você tiver acesso ao repositório `srcarneiro1/srcarneiro1.github.io`:** leia `src/data/linkedin.json` e `src/data/translations.json` direto da branch `main`. Antes de começar, informe o valor de `source.importedAt` que você leu, para o usuário confirmar que é a versão atual.
-2. **Se não tiver acesso:** peça os dois arquivos antes de começar.
+1. **Se você tiver acesso ao repositório `srcarneiro1/srcarneiro1.github.io`:** leia `src/data/linkedin.json`, `src/data/translations.json` e `src/data/redactions.json` direto da branch `main`. Antes de começar, informe o valor de `source.importedAt` que você leu, para o usuário confirmar que é a versão atual.
+2. **Se não tiver acesso:** peça esses três arquivos antes de começar.
 
 Sem o `linkedin.json` anterior, trate todas as experiências como novas.
 
 ### Se você puder gravar no repositório
 
 - Entregue por **pull request** numa branch nova (ex.: `chore/linkedin-AAAA-MM-DD`), **nunca direto na `main`**. Assim os testes de privacidade e consistência rodam antes do merge.
-- O pull request altera **somente** `src/data/linkedin.json` e `src/data/translations.json`.
+- O pull request altera **somente** `src/data/linkedin.json` e `src/data/translations.json` (e `src/data/redactions.json`, se o usuário aprovar uma regra nova).
 - Não faça o merge: o usuário aprova depois de ver os testes verdes.
 - **Nunca adicione o PDF ao repositório**, em nenhuma pasta, branch ou commit.
 Nunca peça nem aceite que o PDF seja enviado ao GitHub.
