@@ -3,6 +3,10 @@ name: Deploy portfolio to GitHub Pages
 on:
   push:
     branches: [main]
+    paths-ignore: ['linkedin/**']
+  workflow_run:
+    workflows: ['Import LinkedIn profile']
+    types: [completed]
   workflow_dispatch:
 
 permissions:
@@ -14,16 +18,19 @@ concurrency:
 
 jobs:
   build:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
+        with:
+          ref: main
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '22'
       - name: Install dependencies
-        run: npm install --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
       - name: Typecheck and build
         run: npm run build
       - name: Upload Pages artifact
