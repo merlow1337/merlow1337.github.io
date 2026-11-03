@@ -1,0 +1,33 @@
+import { profile, experiences, education, allSkills, courses, languages, type Lang, type Experience } from '../data/resume'
+import { copy } from '../i18n'
+
+const startYear = (exp: Experience) => exp.start?.year ?? Number(/\d{4}/.exec(exp.period.pt)?.[0] ?? 0)
+
+/** Versão do currículo usada no PDF (impressão). Texto puro, sem foto, legível por ATS. */
+export function ATSResume({ lang }: { lang: Lang }) {
+  const t = copy[lang]
+  return (
+    <article className="ats-document" aria-hidden="true">
+      <h1>{profile.name}</h1>
+      <p>{profile.role[lang]} | {profile.location} | {profile.email} | {profile.linkedin}</p>
+      <h2>{t.resume}</h2>
+      <p>{profile.summary[lang].replace(/\n+/g, ' ')}</p>
+      <h2>{t.work}</h2>
+      {experiences.map(exp => (
+        <div className="ats-job" key={exp.id}>
+          <h3>{exp.position[lang]} - {exp.company}</h3>
+          <p className="ats-dates">{exp.period[lang]} | {exp.location[lang]}</p>
+          <p>{exp.summary[lang]}</p>
+          <ul>{exp.highlights[lang].slice(0, startYear(exp) >= 2022 ? 3 : 1).map((line, i) => <li key={i}>{line}</li>)}</ul>
+        </div>
+      ))}
+      <h2>{t.school}</h2>
+      {education.map((ed, i) => <p key={i}><strong>{ed.degree[lang]}</strong> - {ed.school} ({ed.period})</p>)}
+      {courses.length > 0 && <><h2>{t.coursesTitle}</h2><p>{courses.map(c => c.name + ([c.issuer, c.year].filter(Boolean).length ? ' (' + [c.issuer, c.year].filter(Boolean).join(', ') + ')' : '')).join('; ')}</p></>}
+      <h2>{t.talent}</h2>
+      {allSkills.map((group, i) => <p key={i}><strong>{group.name[lang]}:</strong> {group.items.join(', ')}</p>)}
+      <h2>{t.languages}</h2>
+      <p>{languages.map(item => item.name[lang] + ' (' + item.level[lang] + ')').join(', ')}</p>
+    </article>
+  )
+}

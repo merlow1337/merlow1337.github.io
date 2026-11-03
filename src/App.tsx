@@ -1,18 +1,21 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { profile, experiences, education, allSkills, research, courses, languages, headlines, dataSource, type Lang, type Experience } from './data/resume'
+import { profile, experiences, education, allSkills, research, courses, languages, headlines, dataSource, firstYear, longestCompany, distributionCenters, postgrads, type Lang, type Experience } from './data/resume'
 import { copy } from './i18n'
 import type { AgentAction } from './agent/agent'
 import { AgentDock } from './components/AgentDock'
 import { JobCopilot } from './components/JobCopilot'
 import { SkillGraph } from './components/SkillGraph'
 import { Terminal } from './components/Terminal'
+import { ATSResume } from './components/ATSResume'
 import { useAchievements, achievementList, maxXp, type AchievementId } from './hooks/useAchievements'
 
 type Theme = 'midnight' | 'light' | 'neon'
 type Mode = 'recruiter' | 'agent'
 const themes: Theme[] = ['midnight', 'light', 'neon']
-const startYear = (exp: Experience) => Number(/\d{4}/.exec(exp.period.pt)?.[0] ?? 0)
-const firstYear = Math.min(...experiences.map(startYear))
+const startYear = (exp: Experience) => exp.start?.year ?? Number(/\d{4}/.exec(exp.period.pt)?.[0] ?? 0)
+const tenure = longestCompany()
+const dcs = distributionCenters()
+const researchExp = experiences.find(exp => exp.focus === 'research')
 
 const read = (key: string) => { try { return localStorage.getItem(key) } catch { return null } }
 const write = (key: string, value: string) => { try { localStorage.setItem(key, value) } catch { /* opcional */ } }
@@ -39,34 +42,6 @@ function useTyped(lines: readonly string[]) {
     return () => clearTimeout(timer)
   }, [lines])
   return text
-}
-
-function ATSResume({ lang }: { lang: Lang }) {
-  const t = copy[lang]
-  return (
-    <article className="ats-document" aria-hidden="true">
-      <h1>{profile.name}</h1>
-      <p>{profile.role[lang]} | {profile.location} | {profile.email} | {profile.linkedin}</p>
-      <h2>{t.resume}</h2>
-      <p>{profile.summary[lang].replace(/\n+/g, ' ')}</p>
-      <h2>{t.work}</h2>
-      {experiences.map(exp => (
-        <div className="ats-job" key={exp.id}>
-          <h3>{exp.position[lang]} - {exp.company}</h3>
-          <p className="ats-dates">{exp.period[lang]} | {exp.location[lang]}</p>
-          <p>{exp.summary[lang]}</p>
-          <ul>{exp.highlights[lang].slice(0, startYear(exp) >= 2022 ? 3 : 1).map((line, i) => <li key={i}>{line}</li>)}</ul>
-        </div>
-      ))}
-      <h2>{t.school}</h2>
-      {education.map((ed, i) => <p key={i}><strong>{ed.degree[lang]}</strong> - {ed.school} ({ed.period})</p>)}
-      {courses.length > 0 && <><h2>{t.coursesTitle}</h2><p>{courses.map(c => c.name + ([c.issuer, c.year].filter(Boolean).length ? ' (' + [c.issuer, c.year].filter(Boolean).join(', ') + ')' : '')).join('; ')}</p></>}
-      <h2>{t.talent}</h2>
-      {allSkills.map((group, i) => <p key={i}><strong>{group.name[lang]}:</strong> {group.items.join(', ')}</p>)}
-      <h2>{t.languages}</h2>
-      <p>{languages.map(item => item.name[lang] + ' (' + item.level[lang] + ')').join(', ')}</p>
-    </article>
-  )
 }
 
 export default function App() {
@@ -203,11 +178,13 @@ export default function App() {
     { id: 'formacao', label: t.nav[4], short: t.navShort[4] },
   ]
   const filters = ['all', 'operations', 'data', 'leadership', 'research'].map((id, i) => ({ id, label: t.filters[i] }))
+  // todos os números vêm dos dados (LinkedIn), nada escrito à mão
+  const pad = (n: number) => String(n).padStart(2, '0')
   const stats = [
-    [String(new Date().getFullYear() - firstYear), t.stats[0][0], t.stats[0][1] + firstYear],
-    ['23', t.stats[1][0], t.stats[1][1]],
-    [String(experiences.filter(exp => exp.company === 'Suzano').length).padStart(2, '0'), t.stats[2][0], t.stats[2][1]],
-    [String(education.filter(ed => /p[óo]s/i.test(ed.degree.pt)).length).padStart(2, '0'), t.stats[3][0], t.stats[3][1]],
+    [String(new Date().getFullYear() - firstYear), t.stats.years, t.stats.since + ' ' + firstYear],
+    ...(dcs ? [[pad(dcs.count), t.stats.dcs, dcs.company]] : []),
+    ...(tenure.roles > 1 ? [[pad(tenure.roles), t.stats.roles + ' ' + tenure.company, Math.floor(tenure.months / 12) + (lang === 'pt' ? ' anos de casa' : ' years tenure')]] : []),
+    [pad(postgrads().length), t.stats.postgrads, postgrads().map(ed => ed.degree[lang].split('—').pop()!.replace(/\(.*\)|Premium/g, '').trim()).join(' · ')],
   ]
   const quickQuestions = lang === 'pt'
     ? ['O que ele faz hoje?', 'Qual a experiência com IA?', 'Ele sabe SQL e Python?']
@@ -419,7 +396,7 @@ export default function App() {
               </div>
             )}
             <div className="card research" id="pesquisa">
-              <span className="kicker">UFES · CNPq · 2023—2024 · {t.researchTitle}</span>
+              <span className="kicker">{researchExp ? researchExp.company.replace(/.*—\s*/, '').replace('Universidade Federal do Espírito Santo', 'UFES') + ' · ' + researchExp.period[lang] + ' · ' : ''}{t.researchTitle}</span>
               <h3>{research.name}</h3>
               <p>{research.description[lang]}</p>
               <a className="btn btn-ghost" href={profile.research} target="_blank" rel="noreferrer">{t.researchBtn} ↗</a>

@@ -211,6 +211,17 @@ writeFileSync(OUT, JSON.stringify(result, null, 2) + '\n')
 
 console.log(`✓ ${basename(file)} → src/data/linkedin.json`)
 console.log(`  ${data.experience.length} experiências · ${data.education.length} formações · ${data.languages.length} idiomas · ${data.certifications.length} certificações · ${data.topSkills.length} competências`)
+// Traduções que faltam (memória PT→EN em src/data/translations.json)
+const TR = resolve('src/data/translations.json')
+if (existsSync(TR)) {
+  const memory = JSON.parse(readFileSync(TR, 'utf8')).entries ?? {}
+  const texts = [...data.summary.split(/\n{2,}/), data.headline, ...data.experience.flatMap(exp => [exp.position, exp.description, ...exp.highlights]), ...data.education.map(ed => ed.degree)].filter(Boolean)
+  const missing = [...new Set(texts)].filter(text => !memory[text])
+  if (missing.length) {
+    console.log(`  ⚠ ${missing.length} texto(s) sem tradução para o inglês — adicione em src/data/translations.json:`)
+    for (const text of missing) console.log('    • ' + text.slice(0, 110) + (text.length > 110 ? '…' : ''))
+  } else console.log('  ✓ todas as traduções EN estão em dia')
+}
 if (previous) {
   const before = new Set(previous.experience.map(exp => exp.company + ' | ' + exp.position))
   const after = new Set(data.experience.map(exp => exp.company + ' | ' + exp.position))

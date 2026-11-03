@@ -1,7 +1,7 @@
 // Filipe.ai — agente local que responde perguntas sobre o currículo.
 // Arquitetura: roteador de intenções → plano → ferramentas (busca BM25, job match, ações na página) → resposta com citações.
 // Não usa LLM nem API externa: nenhuma chave, nenhum dado enviado. Tudo é determinístico e auditável.
-import { profile, experiences, education, allSkills as skills, research, courses, languages, dataSource, type Lang } from '../data/resume'
+import { profile, experiences, education, allSkills as skills, research, courses, languages, dataSource, firstYear, longestCompany, postgrads, type Lang } from '../data/resume'
 import { search, indexStats } from './knowledge'
 import { matchJob, evidenceFor, type Evidence, type MatchResult } from './jobMatch'
 import { normalize, conceptsIn, conceptById } from './text'
@@ -47,7 +47,6 @@ const rules: { intent: Intent; pattern: RegExp }[] = [
   { intent: 'career', pattern: /\b(experiencias?|trajetoria|carreira|empresas|historico|career|experience|companies|resumo|perfil|summary|profile)\b/ },
 ]
 
-const firstYear = Math.min(...experiences.map(exp => Number(/\d{4}/.exec(exp.period.pt)?.[0] ?? 9999)))
 
 const t = {
   pt: {
@@ -170,9 +169,14 @@ export function runAgent(input: string, lang: Lang): AgentReply {
       plan(L ? 'calcular tempo de carreira a partir dos períodos' : 'compute career length from periods')
       tool(`compute_tenure(experiences)`)
       observe(`${L ? 'primeiro registro' : 'first record'}: ${firstYear}`)
+      const tenure = longestCompany()
+      const tenureYears = Math.floor(tenure.months / 12)
+      const extraPt = tenure.roles > 1 ? ` — incluindo ${tenureYears >= 1 ? 'mais de ' + tenureYears + (tenureYears > 1 ? ' anos' : ' ano') : tenure.months + ' meses'} na ${tenure.company}, em ${tenure.roles} cargos com progressão` : ''
+      const extraEn = tenure.roles > 1 ? ` — including ${tenureYears >= 1 ? 'over ' + tenureYears + (tenureYears > 1 ? ' years' : ' year') : tenure.months + ' months'} at ${tenure.company}, across ${tenure.roles} roles with steady progression` : ''
+      observe(`${tenure.company}: ${tenure.roles} roles, ${tenure.months} months`)
       text = L
-        ? `O Filipe tem cerca de **${years} anos de experiência profissional**, desde ${firstYear}, passando por ${companiesSummary(lang).length} organizações — incluindo mais de 3 anos na Suzano, em 4 cargos com progressão.`
-        : `Filipe has about **${years} years of professional experience**, since ${firstYear}, across ${companiesSummary(lang).length} organizations — including over 3 years at Suzano, across 4 roles with steady progression.`
+        ? `O Filipe tem cerca de **${years} anos de experiência profissional**, desde ${firstYear}, passando por ${companiesSummary(lang).length} organizações${extraPt}.`
+        : `Filipe has about **${years} years of professional experience**, since ${firstYear}, across ${companiesSummary(lang).length} organizations${extraEn}.`
       citations.push({ title: L ? 'Trajetória' : 'Career', target: 'experiencia' })
       break
     }
@@ -212,9 +216,13 @@ export function runAgent(input: string, lang: Lang): AgentReply {
       tool('evidence_for(["ai", "automation", "security"])')
       const ev = [...evidenceFor('ai', lang), ...evidenceFor('automation', lang), ...evidenceFor('security', lang)]
       observe(`${ev.length} ${L ? 'evidências' : 'pieces of evidence'}`)
-      text = L
-        ? `IA e automação estão no centro do momento atual do Filipe:\n\n• **Pós-graduação em Inteligência Artificial** (Faculdade de Minas, 2025)\n• **Pós-graduação em Segurança da Informação** (2025), que sustenta o uso responsável de IA e dados (LGPD)\n• Automação de processos e integrações com JavaScript, TypeScript, APIs REST e Python\n• Este site: um agente local com recuperação de informação (BM25), roteamento de intenções e uso de ferramentas — eu sou a prova prática.`
-        : `AI and automation are at the core of Filipe's current focus:\n\n• **Postgraduate studies in Artificial Intelligence** (Faculdade de Minas, 2025)\n• **Postgraduate studies in Information Security** (2025), supporting responsible use of AI and data\n• Process automation and integrations with JavaScript, TypeScript, REST APIs and Python\n• This site: a local agent with information retrieval (BM25), intent routing and tool use — I'm the hands-on proof.`
+      // tudo vem dos dados: pós-graduações e experiências que citam IA/automação
+      const studies = postgrads().map(ed => `• **${ed.degree[lang]}** (${ed.school}, ${ed.period})`)
+      const work = ev.filter(item => item.kind === 'experience').slice(0, 2).map(item => `• ${L ? 'Automação e dados em' : 'Automation and data at'} **${item.title}**`)
+      text = [
+        L ? 'IA e automação na trajetória do Filipe:' : "AI and automation in Filipe's career:",
+        [...studies, ...work, L ? '• Este site: um agente local com recuperação de informação (BM25), roteamento de intenções e uso de ferramentas.' : '• This site: a local agent with information retrieval (BM25), intent routing and tool use.'].join('\n'),
+      ].join('\n\n')
       citations.push(...ev.filter((item, i, all) => all.findIndex(other => other.title === item.title) === i).slice(0, 3))
       citations.push({ title: L ? 'Arquitetura do agente' : 'Agent architecture', target: 'agente' })
       break
@@ -222,7 +230,8 @@ export function runAgent(input: string, lang: Lang): AgentReply {
     case 'research': {
       plan(L ? 'recuperar pesquisa científica' : 'retrieve scientific research')
       tool('get_research()')
-      text = `**${research.name}**\n\n${research.description[lang]}\n\n${L ? 'Iniciação científica na UFES com financiamento do CNPq (2023–2024), usando OpenRefine e Gephi para análise de redes.' : 'Undergraduate research at UFES funded by CNPq (2023–2024), using OpenRefine and Gephi for network analysis.'}`
+      const researchExp = experiences.find(exp => exp.focus === 'research')
+      text = `**${research.name}**\n\n${research.description[lang]}` + (researchExp ? `\n\n**${researchExp.position[lang]}** — ${researchExp.company} (${researchExp.period[lang]})\n\n${researchExp.summary[lang]}` : '')
       citations.push({ title: L ? 'Pesquisa científica' : 'Scientific research', target: 'pesquisa' })
       actions.push({ type: 'scroll', target: 'pesquisa' })
       break

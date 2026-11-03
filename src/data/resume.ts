@@ -5,10 +5,13 @@
 //
 // Se o linkedin.json não existir, o site usa apenas o curriculum.ts.
 import * as base from './curriculum'
-import type { Experience, Education, LocalText } from './curriculum'
+import type { Education, LocalText } from './curriculum'
 import * as extra from './extra'
 
-export type { Lang, Experience, Education, LocalText } from './curriculum'
+export type { Lang, Education, LocalText } from './curriculum'
+export type DatePoint = { year: number; month: number | null }
+/** Experiência com as datas estruturadas do LinkedIn (para cálculos como tempo de casa). */
+export type Experience = base.Experience & { start?: DatePoint | null; end?: DatePoint | null }
 
 type LinkedInDate = { year: number; month: number | null } | null
 type LinkedIn = {
@@ -26,6 +29,21 @@ type LinkedIn = {
 
 const found = import.meta.glob<{ default: LinkedIn }>('./linkedin.json', { eager: true })
 const linkedin: LinkedIn | null = Object.values(found)[0]?.default ?? null
+
+// ---------- memória de tradução PT → EN ----------
+// Chave = texto exato do LinkedIn. Se faltar tradução, o texto em PT é usado no modo EN
+// e entra em `pendingTranslations` (o `npm run check` lista tudo o que falta).
+const memoryFile = import.meta.glob<{ default: { entries: Record<string, string> } }>('./translations.json', { eager: true })
+const memory: Record<string, string> = Object.values(memoryFile)[0]?.default.entries ?? {}
+export const pendingTranslations: { where: string; pt: string }[] = []
+function translate(pt: string, where: string, fallback?: string): string {
+  if (!pt) return fallback ?? ''
+  const en = memory[pt]
+  if (en) return en
+  if (fallback) return fallback
+  pendingTranslations.push({ where, pt })
+  return pt
+}
 
 // ---------- helpers ----------
 const norm = (text: string) => text.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, ' ').trim()
@@ -68,6 +86,7 @@ const autoTags = (text: string) => TAG_HINTS.filter(tag => norm(text).includes(n
 
 // ---------- merge: experiências ----------
 function mergeExperiences(): Experience[] {
+  pendingTranslations.length = 0
   if (!linkedin) return base.experiences
   const used = new Set<string>()
   return linkedin.experience.map(item => {
@@ -75,17 +94,21 @@ function mergeExperiences(): Experience[] {
     const match = candidates.length === 1 ? candidates[0] : candidates.map(exp => ({ exp, score: similarity(exp.position.pt, item.position) })).sort((a, b) => b.score - a.score)[0]?.exp
     if (match) used.add(match.id)
     const text = [item.position, item.description, ...item.highlights].join(' ')
+    // local sempre vem do LinkedIn (PT e EN derivados do mesmo texto)
     const location = shortLocation(item.location)
+    const where = cleanCompany(item.company) + ' · ' + item.position
     return {
       id: match?.id ?? slug(item.company + ' ' + item.position),
       company: cleanCompany(item.company),
-      position: { pt: item.position.replace(/\s+-\s+/g, ' — '), en: match?.position.en ?? item.position },
+      position: { pt: item.position.replace(/\s+-\s+/g, ' — '), en: translate(item.position, where + ' (cargo)') },
       period: formatPeriod(item.start, item.end),
-      location: { pt: location.pt || match?.location.pt || '', en: match?.location.en ?? location.en },
-      summary: { pt: item.description || match?.summary.pt || '', en: match?.summary.en ?? item.description },
-      highlights: { pt: item.highlights, en: match?.highlights.en.length ? match.highlights.en : item.highlights },
+      location,
+      summary: { pt: item.description, en: translate(item.description, where + ' (descrição)') },
+      highlights: { pt: item.highlights, en: item.highlights.map((line, i) => translate(line, `${where} (bullet ${i + 1})`)) },
       tags: match?.tags ?? autoTags(text),
       focus: match?.focus ?? inferFocus(text),
+      start: item.start,
+      end: item.end,
     }
   })
 }
@@ -100,7 +123,7 @@ function mergeEducation(): Education[] {
       .sort((a, b) => b.score - a.score)[0]?.ed
     const period = item.startYear && item.endYear && item.startYear !== item.endYear ? `${item.startYear} — ${item.endYear}` : String(item.endYear ?? item.startYear ?? '')
     const degree = item.degree.replace(/^(Pós-graduação Lato Sensu), /i, 'Pós-graduação lato sensu — ').replace(/^(Bacharel(?:ado)? em [^,]+), .*/i, '$1')
-    return { school: match?.school ?? cleanCompany(item.school), degree: { pt: degree, en: match?.degree.en ?? degree }, period, note: match?.note }
+    return { school: match?.school ?? cleanCompany(item.school), degree: { pt: degree, en: translate(item.degree, cleanCompany(item.school) + ' (curso)', match?.degree.en) }, period, note: match?.note }
   })
 }
 
@@ -135,21 +158,52 @@ const skills = base.skills.map((group, i) =>
 )
 
 // ---------- exports ----------
+export const experiences = mergeExperiences()
+export const education = mergeEducation()
+const summaryPt = linkedin?.summary || base.profile.summary.pt
 export const profile = {
   ...base.profile,
   name: linkedin?.name || base.profile.name,
   location: linkedin?.location || base.profile.location,
-  headline: linkedin?.headline || base.profile.tagline.pt,
-  summary: { pt: linkedin?.summary || base.profile.summary.pt, en: base.profile.summary.en },
+  headline: { pt: linkedin?.headline || base.profile.tagline.pt, en: linkedin ? translate(linkedin.headline, 'headline') : base.profile.tagline.en },
+  // resumo traduzido parágrafo a parágrafo, para que uma edição pequena no LinkedIn só pendure aquele parágrafo
+  summary: { pt: summaryPt, en: linkedin ? summaryPt.split(/\n{2,}/).map((p, i) => translate(p, `resumo (parágrafo ${i + 1})`)).join('\n\n') : base.profile.summary.en },
   // cargo atual = primeira experiência do LinkedIn
-  role: linkedin?.experience[0] ? { pt: linkedin.experience[0].position, en: mergeExperiences()[0].position.en } : base.profile.role,
+  role: experiences[0] ? { pt: experiences[0].position.pt, en: experiences[0].position.en } : base.profile.role,
 }
-export const experiences = mergeExperiences()
-export const education = mergeEducation()
 export const research = base.research
 export { skills, languages, courses }
 export const extraSkills = extra.extraSkills
 // a primeira frase do efeito de digitação é sempre o cargo atual vindo do LinkedIn
 export const headlines = { pt: [profile.role.pt, ...extra.headlines.pt.slice(1)], en: [profile.role.en, ...extra.headlines.en.slice(1)] }
 export const allSkills = [...skills, ...extra.extraSkills]
+// ---------- fatos derivados (nada de número escrito à mão no site) ----------
+const monthsBetween = (a: DatePoint, b: DatePoint) => (b.year - a.year) * 12 + ((b.month ?? 1) - (a.month ?? 1)) + 1
+const now = (): DatePoint => ({ year: new Date().getFullYear(), month: new Date().getMonth() + 1 })
+/** Empresa com mais cargos: nome, quantidade de cargos e meses de casa (do 1º início ao último fim). */
+export function longestCompany() {
+  const groups = new Map<string, Experience[]>()
+  experiences.forEach(exp => groups.set(exp.company, [...(groups.get(exp.company) ?? []), exp]))
+  const [company, items] = [...groups.entries()].sort((a, b) => b[1].length - a[1].length)[0] ?? ['', []]
+  const starts = items.map(exp => exp.start).filter(Boolean) as DatePoint[]
+  const ends = items.map(exp => exp.end ?? now())
+  if (!starts.length) return { company, roles: items.length, months: 0 }
+  const first = starts.sort((a, b) => a.year - b.year || (a.month ?? 1) - (b.month ?? 1))[0]
+  const last = ends.sort((a, b) => b.year - a.year || (b.month ?? 1) - (a.month ?? 1))[0]
+  return { company, roles: items.length, months: monthsBetween(first, last) }
+}
+/** Maior número de Centros de Distribuição citado no LinkedIn (ou null se não houver). */
+export function distributionCenters(): { count: number; company: string } | null {
+  let best: { count: number; company: string } | null = null
+  for (const exp of experiences) {
+    for (const text of [exp.summary.pt, ...exp.highlights.pt]) {
+      const m = /(\d+)\s+Centros? de Distribui/i.exec(text)
+      if (m && (!best || Number(m[1]) > best.count)) best = { count: Number(m[1]), company: exp.company }
+    }
+  }
+  return best
+}
+export const postgrads = () => education.filter(ed => /p[óo]s-gradua/i.test(ed.degree.pt))
+export const firstYear = Math.min(...experiences.map(exp => exp.start?.year ?? Number(/\d{4}/.exec(exp.period.pt)?.[0] ?? 9999)))
+
 export const dataSource = linkedin ? { from: 'linkedin' as const, importedAt: linkedin.source.importedAt } : { from: 'manual' as const, importedAt: null }

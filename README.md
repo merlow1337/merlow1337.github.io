@@ -26,30 +26,37 @@ Código: `src/agent/` (`text.ts` conceitos e sinônimos · `knowledge.ts` índic
 O LinkedIn não libera API de perfil para uso pessoal, e scraping viola os termos de uso. Por isso o site usa o **PDF que o próprio LinkedIn exporta** (perfil → *Recursos* → *Salvar como PDF*).
 
 ```
-linkedin/Profile.pdf  ──npm run linkedin:import──▶  src/data/linkedin.json  ──▶  site
-                                                     (sem telefone/e-mail)
+Profile.pdf ──importador──▶ src/data/linkedin.json  ─┐
+                            (sem contato)             ├─▶ src/data/resume.ts ─▶ site, agente, JSON-LD e PDF ATS
+             tradução ───▶ src/data/translations.json ┘
 ```
 
-**Opção A, local (recomendada):** o PDF nunca sai do seu computador.
+**O PDF nunca vai para o GitHub.** Duas formas de atualizar:
 
-```bash
-cp ~/Downloads/Profile.pdf linkedin/
-npm run linkedin:import
-npm run dev            # confira
-git add src/data/linkedin.json
-git commit -m "chore(data): atualiza LinkedIn"
-git push
-```
-
-**Opção B, pelo GitHub:** *Add file → Upload files* → `linkedin/Profile.pdf`. O workflow *Import LinkedIn profile* converte o PDF, apaga o arquivo, faz o commit do JSON e dispara o deploy.
-⚠️ O PDF contém telefone e e-mail e continua no histórico do Git mesmo depois de apagado. Como o repositório é público, prefira a opção A.
+- **Com um assistente:** envie o PDF, o `linkedin.json` e o `translations.json` atuais e use a skill em `.github/skills/atualizar-curriculo-linkedin`. Suba só os 2 JSON devolvidos (*Add file → Upload files* em `src/data/`).
+- **No computador:** `cp ~/Downloads/Profile.pdf linkedin/ && npm run linkedin:import && npm run check`, depois commit dos 2 JSON.
 
 ### De onde vem cada dado
 
-- `src/data/linkedin.json` (gerado): experiências, descrições, períodos, formação, idiomas, certificações e resumo **em PT**. É a fonte da verdade.
-- `src/data/curriculum.ts` (manual): **traduções EN**, tags, área de cada experiência, e-mail, links e o resumo em inglês. Quando você adicionar uma experiência nova no LinkedIn, ela aparece no site automaticamente (com tags inferidas); para ter a versão em inglês, adicione a entrada correspondente aqui.
-- `src/data/extra.ts` (manual): frases do topo, grupo "IA & segurança" e cursos extras.
-- `src/data/resume.ts`: junta tudo. Sem o `linkedin.json`, o site usa só o `curriculum.ts`.
+| Arquivo | Conteúdo | Quem edita |
+|---|---|---|
+| `src/data/linkedin.json` | experiências, períodos, descrições, formação, idiomas, certificações e resumo (PT) | gerado pelo importador |
+| `src/data/translations.json` | memória de tradução PT → EN (chave = texto exato do LinkedIn) | assistente ou você |
+| `src/data/curriculum.ts` | e-mail, links, tags e área de cada experiência | manual, raramente |
+| `src/data/extra.ts` | frases do topo, grupo "IA & segurança", cursos extras | manual |
+
+Cargo atual, números do topo (anos de carreira, CDs, cargos na mesma empresa, pós-graduações), respostas do agente, JSON-LD e PDF ATS são **calculados** desses arquivos. Nada é escrito à mão em dois lugares.
+
+## Validação automática
+
+`npm run check` (e o GitHub Actions, em todo push) roda, nesta ordem:
+
+1. **Privacidade** (`scripts/check-sensitive.mjs`): bloqueia PDF, Word, planilhas, chaves e `.env` versionados, imagens fora da lista permitida, telefone, CPF e e-mails não autorizados, tanto no repositório quanto no site gerado.
+2. **Consistência** (`tests/data.test.ts`): o site tem exatamente as experiências, a ordem, as datas e os bullets do LinkedIn; o cargo atual é o mesmo no topo, no JSON-LD e no PDF; a versão EN tem a mesma estrutura da PT; o PDF ATS (PT e EN) contém todas as experiências, formações e idiomas; traduções pendentes viram aviso.
+3. **Agente** (`tests/agent.test.ts`): cada pergunta cai na intenção certa, toda citação leva a uma seção existente, nunca aparece telefone e perguntas fora do currículo não são respondidas com invenção.
+4. **Build** e nova varredura de privacidade em `dist/`.
+
+Se algo falhar, o deploy não acontece e o site continua na última versão boa.
 
 ## Desenvolvimento
 
@@ -58,7 +65,7 @@ Requer Node.js 22+.
 ```bash
 npm ci
 npm run dev
-npm run build
+npm run check   # privacidade + testes + build
 ```
 
 O deploy (`.github/workflows/deploy.yml`) publica `dist/` a cada push na `main`. Em **Settings → Pages**, use **Source: GitHub Actions**.
@@ -67,5 +74,5 @@ O deploy (`.github/workflows/deploy.yml`) publica `dist/` a cada push na `main`.
 
 - Nenhum segredo, token ou chave de API no código ou no navegador.
 - O importador **descarta a seção de contato** do PDF; o telefone nunca vai para o site.
-- `linkedin/*.pdf` está no `.gitignore`.
+- `linkedin/*.pdf` está no `.gitignore`, e o CI bloqueia o deploy se algum documento for versionado.
 - Sem cookies, analytics ou coleta de dados. As preferências (tema, idioma, conquistas) ficam só no `localStorage` do visitante.

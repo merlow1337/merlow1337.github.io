@@ -2,7 +2,6 @@ export const copy = {
   pt: {
     nav: ['Início', 'Agente', 'Trajetória', 'Competências', 'Formação'],
     navShort: ['Início', 'Agente', 'Carreira', 'Skills', 'Formação'],
-    role: 'Supervisor de Processos e Inventário',
     statement: 'Operações, dados e inteligência artificial trabalhando juntos.',
     intro: 'Combino visão operacional de logística com análise de dados, automação e IA aplicada para resolver problemas reais de negócio.',
     askAgent: 'Perguntar ao agente',
@@ -13,7 +12,7 @@ export const copy = {
     copied: 'Copiado!',
     copyEmail: 'Copiar e-mail',
     agentOnline: 'agente online',
-    stats: [['anos de carreira', 'desde '], ['CDs acompanhados', 'Suzano · UNPE'], ['cargos na Suzano', 'progressão contínua'], ['pós-graduações', 'IA · Segurança']],
+    stats: { years: 'anos de carreira', since: 'desde', dcs: 'CDs acompanhados', roles: 'cargos na', postgrads: 'pós-graduações' },
     profileTitle: 'Perfil profissional',
     contactCard: 'Contato rápido',
     location: 'Localização',
@@ -92,7 +91,6 @@ export const copy = {
   en: {
     nav: ['Home', 'Agent', 'Career', 'Skills', 'Education'],
     navShort: ['Home', 'Agent', 'Career', 'Skills', 'Education'],
-    role: 'Process & Inventory Supervisor',
     statement: 'Operations, data and artificial intelligence working together.',
     intro: 'I combine hands-on logistics operations with data analysis, automation and applied AI to solve real business problems.',
     askAgent: 'Ask the agent',
@@ -103,7 +101,7 @@ export const copy = {
     copied: 'Copied!',
     copyEmail: 'Copy email',
     agentOnline: 'agent online',
-    stats: [['years of career', 'since '], ['DCs monitored', 'Suzano · UNPE'], ['roles at Suzano', 'steady progression'], ['postgrad programs', 'AI · Security']],
+    stats: { years: 'years of career', since: 'since', dcs: 'DCs monitored', roles: 'roles at', postgrads: 'postgrad programs' },
     profileTitle: 'Professional profile',
     contactCard: 'Quick contact',
     location: 'Location',

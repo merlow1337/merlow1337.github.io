@@ -1,21 +1,12 @@
 # linkedin/
 
-Pasta de entrada do PDF exportado pelo LinkedIn (perfil → **Recursos/Mais** → **Salvar como PDF**).
+**Não envie o PDF do LinkedIn para o GitHub.** Ele contém telefone e e-mail, e tudo o que entra no
+repositório fica no histórico público para sempre, mesmo depois de apagado.
+Se um PDF for enviado, o deploy é bloqueado pelo `check:privacy` e o site continua na versão anterior.
 
-**Opção A — local (recomendada, o PDF nunca sai do seu computador)**
+Como atualizar:
 
-```bash
-cp ~/Downloads/Profile.pdf linkedin/
-npm run linkedin:import      # gera src/data/linkedin.json
-npm run dev                  # confira o resultado
-git add src/data/linkedin.json && git commit -m "chore(data): atualiza LinkedIn" && git push
-```
-
-`linkedin/*.pdf` está no `.gitignore`, então o PDF não é commitado por engano.
-
-**Opção B — direto no GitHub**
-
-No site do GitHub: *Add file → Upload files* → envie o `Profile.pdf` para esta pasta.
-O workflow **Import LinkedIn profile** converte, apaga o PDF e publica o site.
-Atenção: o PDF contém seu telefone e e-mail e fica no histórico do Git (mesmo depois de apagado).
-Em repositório público, prefira a opção A.
+- **Com um assistente (Claude/ChatGPT):** envie o PDF + `src/data/linkedin.json` + `src/data/translations.json`
+  e use a skill `.github/skills/atualizar-curriculo-linkedin`. Suba no GitHub só os 2 JSON que ele devolver.
+- **No seu computador:** coloque o PDF aqui (esta pasta ignora PDFs no `.gitignore`), rode
+  `npm run linkedin:import` e depois `npm run check`. O importador lista os textos sem tradução para o inglês.
