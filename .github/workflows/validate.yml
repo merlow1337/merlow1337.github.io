@@ -1,10 +1,12 @@
 name: Validate resume website
 
-# Roda em todo push e PR: privacidade → testes de consistência → build → privacidade do site gerado.
+# Roda em todo push e pull request. Mesmas barreiras do deploy, mais a varredura do histórico inteiro.
 on:
   push:
   pull_request:
     branches: [main]
+  schedule:
+    - cron: '17 9 * * 1' # toda segunda: pega vulnerabilidades novas mesmo sem commits
 
 permissions:
   contents: read
@@ -14,16 +16,33 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # histórico completo, para a varredura de privacidade em todos os commits
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
           cache: npm
       - run: npm ci --no-audit --no-fund
-      - name: Privacidade (documentos e dados pessoais versionados)
+      - name: Privacidade — arquivos atuais
         run: npm run check:privacy
-      - name: Consistência LinkedIn × site × PDF + agente
+      - name: Privacidade — histórico completo do Git
+        run: npm run check:history
+      - name: Vulnerabilidades em dependências (alta ou crítica bloqueia)
+        run: npm run audit
+      - name: Consistência LinkedIn × site × PDF, importador e agente
         run: npm test
       - name: Typecheck e build
         run: npm run build
-      - name: Privacidade do site gerado (dist/)
+      - name: Privacidade — site gerado (dist/)
         run: npm run check:privacy
+      - name: Instalar navegador para os testes de interface
+        run: npx playwright install --with-deps chromium
+      - name: PDF ATS real, interface, teclado e acessibilidade
+        run: npm run test:e2e
+      - name: Guardar PDFs e prints para inspeção visual
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-artifacts
+          path: e2e-artifacts/
+          retention-days: 14
