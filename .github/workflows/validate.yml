@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - feat/curriculo-digital-2026
   pull_request:
     branches:
       - main
@@ -21,6 +20,6 @@ jobs:
         with:
           node-version: '22'
       - name: Install dependencies
-        run: npm install --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
       - name: TypeScript check and build
         run: npm run build
