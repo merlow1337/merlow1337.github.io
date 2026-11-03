@@ -5,3 +5,10 @@ dist/
 !.env.example
 .DS_Store
 *.log
+
+# PDF do LinkedIn contém telefone/e-mail: nunca versionar pelo terminal.
+# (Para usar o fluxo automático, envie o PDF pelo GitHub web: o workflow importa e apaga o arquivo.)
+linkedin/*.pdf
+linkedin/*.PDF
+*.pem
+*.key
