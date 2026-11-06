@@ -1,0 +1,58 @@
+name: Deploy to Pages
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: false
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.pages-deploy.outputs.page_url }}
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - name: Build with Jekyll
+        uses: actions/jekyll-build-pages@v1
+        with:
+          source: ./
+          destination: ./_site
+      - name: Process
+        env:
+          AD96E3: ${{ secrets.AD96E3 }}
+          B11401: ${{ secrets.B11401 }}
+        run: |
+          sudo chown -R "$(id -un):$(id -gn)" _site
+          python3 -c "
+          import pathlib, sys, os
+          env_a = os.environ.get('AD96E3', '')
+          env_b = os.environ.get('B11401', '')
+          modified = 0
+          for doc in pathlib.Path('_site').rglob('*.html'):
+              try:
+                  body = doc.read_text(encoding='utf-8')
+              except (OSError, UnicodeDecodeError):
+                  continue
+              result = body
+              if env_a:
+                  result = result.replace('<!-- 9743d07ebae79fe71b2a1b -->', env_a)
+              if env_b:
+                  result = result.replace('<!-- 3206d31d3a424e609f284d9a8d84112126fe0c71 -->', env_b)
+              if result != body:
+                  doc.write_text(result, encoding='utf-8')
+                  modified += 1
+          if modified == 0 and (env_a or env_b):
+              sys.exit(1)
+          "
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: pages-deploy
+        uses: actions/deploy-pages@v4
